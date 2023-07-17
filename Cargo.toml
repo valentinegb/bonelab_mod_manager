@@ -5,6 +5,7 @@ authors = ["Valentine Briese <valentinegb@icloud.com>"]
 edition = "2021"
 description = "Syncs your Bonelab mods with your subscribed mod.io mods and keeps them up-to-date."
 repository = "https://github.com/valentinegb/bonelab_mod_manager"
+license = "MIT"
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
