@@ -11,3 +11,7 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+modio = "0.8.0"
+postcard = "1.0.4"
+serde = { version = "1.0.171", features = ["derive"] }
+tokio = { version = "1.29.1", features = ["full"] }
