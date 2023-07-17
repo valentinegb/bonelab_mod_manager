@@ -11,6 +11,7 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dialoguer = "0.10.4"
 modio = "0.8.0"
 postcard = "1.0.4"
 serde = { version = "1.0.171", features = ["derive"] }
