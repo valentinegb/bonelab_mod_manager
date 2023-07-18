@@ -12,7 +12,7 @@ use std::env;
 use app_data::AppData;
 use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
 use error::Error;
-use modio::{filter::In, mods, Modio};
+use modio::{filter::In, mods, Credentials, Modio};
 
 const BONELAB_GAME_ID: u32 = 3809;
 
@@ -22,7 +22,7 @@ async fn try_sync() -> Result<(), Error> {
 
     match app_data.modio_token {
         Some(token) => {
-            modio = modio.with_credentials(token);
+            modio = modio.with_credentials(Credentials::with_token(env!("MODIO_API_KEY"), token));
         }
         None => {
             println!("You are not signed in");
@@ -32,6 +32,7 @@ async fn try_sync() -> Result<(), Error> {
                 )
                 .item("Email me a code")
                 .item("Enter a token")
+                .default(0)
                 .interact()?;
 
             match authentication_choice {
@@ -62,7 +63,10 @@ async fn try_sync() -> Result<(), Error> {
                         .with_prompt("Please enter your token")
                         .interact()?;
 
-                    modio = modio.with_credentials(token.clone());
+                    modio = modio.with_credentials(Credentials::with_token(
+                        env!("MODIO_API_KEY"),
+                        token.clone(),
+                    ));
                     app_data.modio_token = Some(token);
 
                     app_data::write(&app_data)?;
