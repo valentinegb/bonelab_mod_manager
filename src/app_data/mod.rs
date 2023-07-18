@@ -9,7 +9,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tokio::io;
 
-use self::error::Error;
+pub(crate) type Error = error::Error;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct AppData {
