@@ -1,16 +1,18 @@
-mod error;
-
 use std::{
     collections::HashMap,
     env::{self, VarError},
     fs::{self, create_dir_all},
+    io,
     path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
-use tokio::io;
 
-pub(crate) type Error = error::Error;
+enum_error!(Error {
+    Io(io::Error),
+    Postcard(postcard::Error),
+    Var(VarError),
+});
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct AppData {

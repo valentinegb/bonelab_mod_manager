@@ -10,151 +10,110 @@
 // - update `installed_mods` in app data when finished installing a mod
 // - fix not being able to see both Android and Windows files
 
-mod app_data;
+#[macro_use]
 mod error;
+mod app_data;
 mod installation;
+mod modio;
 
-use std::env;
+use std::io;
 
-use app_data::AppData;
-use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
-use error::Error;
-use modio::{files::PlatformStatus, filter::In, mods, Credentials, Modio, TargetPlatform};
-
+use crate::app_data::AppData;
 use crate::installation::install_mod;
+use crate::modio::authenticate;
 
 const BONELAB_GAME_ID: u32 = 3809;
 
-async fn try_sync() -> Result<(), Error> {
-    let mut modio = Modio::new(env!("MODIO_API_KEY"))?;
-    let mut app_data = app_data::read()?;
+enum_error!(Error {
+    AppData(app_data::Error),
+    Modio(modio::Error),
+    Io(io::Error),
+});
 
-    match app_data.modio_token {
-        Some(token) => {
-            modio = modio.with_credentials(Credentials::with_token(env!("MODIO_API_KEY"), token));
-        }
-        None => {
-            println!("You are not signed in");
-            let authentication_choice = Select::with_theme(&ColorfulTheme::default())
-                .with_prompt(
-                    "Would you like to receive a code via email or enter a manually created token?",
-                )
-                .item("Email me a code")
-                .item("Enter a token")
-                .default(0)
-                .interact()?;
+async fn sync_mods() -> Result<(), Error> {
+    let modio = authenticate().await?;
+    // let mods = get_subscribed_mods(modio).await?;
+    // let installed_mods = app_data::read()?.installed_mods;
 
-            match authentication_choice {
-                0 => {
-                    let email: String = Input::with_theme(&ColorfulTheme::default())
-                        .with_prompt("Please enter your email")
-                        .interact_text()?;
+    // for r#mod in mods {
+    //     let is_installed = true;
+    //     let is_updated = false;
 
-                    modio.auth().request_code(&email.trim()).await?;
+    //     if !is_installed || is_updated {
+    //         install_mod(r#mod);
+    //     }
+    // }
 
-                    let code: String = Password::with_theme(&ColorfulTheme::default())
-                        .with_prompt("Enter the code emailed to you")
-                        .interact()?;
-                    let credentials = modio.auth().security_code(&code.trim()).await?;
+    // let subscriptions = modio
+    //     .user()
+    //     .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
+    //     .collect()
+    //     .await?;
+    // let reqwest_client = reqwest::Client::new();
 
-                    modio = modio.with_credentials(credentials.clone());
-                    app_data.modio_token = Some(
-                        credentials
-                            .token
-                            .expect("credentials should be token")
-                            .value,
-                    );
+    // for modio_mod in subscriptions {
+    //     println!(
+    //         "checking subscribed mod: {} by {}",
+    //         modio_mod.name, modio_mod.submitted_by.username
+    //     );
 
-                    app_data::write(&app_data)?;
-                }
-                1 => {
-                    let token: String = Password::with_theme(&ColorfulTheme::default())
-                        .with_prompt("Please enter your token")
-                        .interact()?;
+    //     if modio_mod.id == 2380732 {
+    //         println!("mod is... 7/11, aka hecking huge")
+    //     } else if let Some(mod_file) = modio_mod.modfile {
+    //         let mut approved_for_android = false;
 
-                    modio = modio.with_credentials(Credentials::with_token(
-                        env!("MODIO_API_KEY"),
-                        token.clone(),
-                    ));
-                    app_data.modio_token = Some(token);
+    //         for platform in mod_file.platforms {
+    //             if platform.target.display_name() == TargetPlatform::Android.display_name()
+    //                 && platform.status == PlatformStatus::APPROVED
+    //             {
+    //                 approved_for_android = true;
+    //             }
+    //         }
 
-                    app_data::write(&app_data)?;
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
+    //         if approved_for_android {
+    //             let app_data = app_data::read()?;
 
-    let subscriptions = modio
-        .user()
-        .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
-        .collect()
-        .await?;
-    let reqwest_client = reqwest::Client::new();
+    //             if app_data.installed_mods.contains_key(&modio_mod.id) {
+    //                 if let Some(mod_file_version) = mod_file.version {
+    //                     if mod_file_version > app_data.installed_mods[&modio_mod.id].version {
+    //                         println!("mod file is newer than intalled mod");
 
-    for modio_mod in subscriptions {
-        println!(
-            "checking subscribed mod: {} by {}",
-            modio_mod.name, modio_mod.submitted_by.username
-        );
+    //                         if let Err(err) =
+    //                             install_mod(&reqwest_client, mod_file.download.binary_url).await
+    //                         {
+    //                             println!("failed to install mod: {err}");
+    //                         }
+    //                     } else {
+    //                         println!("mod file is not newer than intalled mod");
+    //                     }
+    //                 } else {
+    //                     println!("mod file does not have version");
+    //                 }
+    //             } else {
+    //                 println!("mod is not installed");
 
-        if modio_mod.id == 2380732 {
-            println!("mod is... 7/11, aka hecking huge")
-        } else if let Some(mod_file) = modio_mod.modfile {
-            let mut approved_for_android = false;
+    //                 if let Err(err) =
+    //                     install_mod(&reqwest_client, mod_file.download.binary_url).await
+    //                 {
+    //                     println!("failed to install mod: {err}");
+    //                 }
+    //             }
 
-            for platform in mod_file.platforms {
-                if platform.target.display_name() == TargetPlatform::Android.display_name()
-                    && platform.status == PlatformStatus::APPROVED
-                {
-                    approved_for_android = true;
-                }
-            }
+    //             continue;
+    //         } else {
+    //             println!("mod file not approved for Android");
+    //         }
+    //     }
 
-            if approved_for_android {
-                let app_data = app_data::read()?;
-
-                if app_data.installed_mods.contains_key(&modio_mod.id) {
-                    if let Some(mod_file_version) = mod_file.version {
-                        if mod_file_version > app_data.installed_mods[&modio_mod.id].version {
-                            println!("mod file is newer than intalled mod");
-
-                            if let Err(err) =
-                                install_mod(&reqwest_client, mod_file.download.binary_url).await
-                            {
-                                println!("failed to install mod: {err}");
-                            }
-                        } else {
-                            println!("mod file is not newer than intalled mod");
-                        }
-                    } else {
-                        println!("mod file does not have version");
-                    }
-                } else {
-                    println!("mod is not installed");
-
-                    if let Err(err) =
-                        install_mod(&reqwest_client, mod_file.download.binary_url).await
-                    {
-                        println!("failed to install mod: {err}");
-                    }
-                }
-
-                continue;
-            } else {
-                println!("mod file not approved for Android");
-            }
-        }
-
-        println!("skipping");
-    }
+    //     println!("skipping");
+    // }
 
     Ok(())
 }
 
 #[tokio::main]
 async fn main() {
-    if let Err(err) = try_sync().await {
+    if let Err(err) = sync_mods().await {
         if let Error::Modio(err) = &err {
             if err.is_auth() {
                 if let Ok(app_data) = app_data::read() {

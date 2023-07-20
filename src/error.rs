@@ -1,52 +1,34 @@
-use std::{
-    error,
-    fmt::{self, Display, Formatter},
-    io,
-};
+macro_rules! enum_error {
+    ($enum_error:ident { $( $variant:ident($error:path) ),+ $( , )? }) => {
+        use std::{fmt::{self, Display, Formatter}};
 
-use crate::app_data;
-
-#[derive(Debug)]
-pub(super) enum Error {
-    AppData(app_data::Error),
-    Modio(modio::Error),
-    Io(io::Error),
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::AppData(err) => err.fmt(f),
-            Self::Modio(err) => err.fmt(f),
-            Self::Io(err) => err.fmt(f),
+        #[derive(Debug)]
+        pub(crate) enum $enum_error {
+            $( $variant($error) ),+
         }
-    }
-}
 
-impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match self {
-            Self::AppData(err) => err.source(),
-            Self::Modio(err) => err.source(),
-            Self::Io(err) => err.source(),
+        impl Display for $enum_error {
+            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+                match self {
+                    err => err.fmt(f),
+                }
+            }
         }
-    }
-}
 
-impl From<app_data::Error> for Error {
-    fn from(value: app_data::Error) -> Self {
-        Self::AppData(value)
-    }
-}
+        impl std::error::Error for $enum_error {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                match self {
+                    err => err.source(),
+                }
+            }
+        }
 
-impl From<modio::Error> for Error {
-    fn from(value: modio::Error) -> Self {
-        Self::Modio(value)
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(value: io::Error) -> Self {
-        Self::Io(value)
-    }
+        $(
+            impl From<$error> for $enum_error {
+                fn from(value: $error) -> Self {
+                    Self::$variant(value)
+                }
+            }
+        )+
+    };
 }
