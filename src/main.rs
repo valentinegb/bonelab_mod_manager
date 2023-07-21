@@ -1,8 +1,6 @@
 // TODO
 // - style terminal text
 //   - tasks (not subtasks) bold, success green, error red, etc.
-// - modularize code into tasks
-// - show progress bars for downloading and extracting
 // - fix email not sending
 // - fix password input freezing
 // - fix failing to extract specifically my mods (maybe b/c mac?)
@@ -11,44 +9,106 @@
 // - fix not being able to see both Android and Windows files
 
 mod app_data;
+mod authentication;
 mod installation;
-mod modio;
 
 use std::io;
 
+use futures::future::try_join_all;
+use indicatif::{MultiProgress, ProgressBar};
+use modio::TargetPlatform;
+use modio::{filter::In, mods};
+use tokio::task::JoinError;
 use wrapping_error::wrapping_error;
 
 use crate::app_data::AppData;
+use crate::authentication::authenticate;
 use crate::installation::install_mod;
-use crate::modio::authenticate;
 
 const BONELAB_GAME_ID: u32 = 3809;
 
 wrapping_error!(Error {
     AppData(app_data::Error),
-    Modio(modio::Error),
+    Authentication(authentication::Error),
     Io(io::Error),
+    Modio(modio::Error),
+    Join(JoinError),
+    Installation(installation::Error),
 });
 
 async fn sync_mods() -> Result<(), Error> {
     let modio = authenticate().await?;
-    // let mods = get_subscribed_mods(modio).await?;
-    // let installed_mods = app_data::read()?.installed_mods;
 
-    // for r#mod in mods {
-    //     let is_installed = true;
-    //     let is_updated = false;
+    println!("getting subscribed mods...");
 
-    //     if !is_installed || is_updated {
-    //         install_mod(r#mod);
-    //     }
-    // }
+    let mods = modio
+        .user()
+        .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
+        .collect()
+        .await?;
 
-    // let subscriptions = modio
-    //     .user()
-    //     .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
-    //     .collect()
-    //     .await?;
+    println!("got subscribed mods\ngetting installed mods...");
+
+    let installed_mods = app_data::read()?.installed_mods;
+
+    println!("got installed mods\niterating over subscribed mods...");
+
+    let mut tasks = Vec::new();
+    let progress = MultiProgress::new();
+
+    for r#mod in mods {
+        println!("mod is {} by {}", r#mod.name, r#mod.submitted_by.username);
+
+        match &r#mod.modfile {
+            Some(mod_file) => {
+                println!("mod has file");
+
+                let mut supports_android = false;
+
+                for platform in &mod_file.platforms {
+                    if platform.target.display_name() == TargetPlatform::Android.display_name() {
+                        supports_android = true;
+                    }
+                }
+
+                if supports_android {
+                    println!("mod supports Android");
+
+                    match &mod_file.version {
+                        Some(mod_version) => {
+                            println!("mod has version");
+
+                            if let Some(installed_mod) = installed_mods.get(&r#mod.id) {
+                                println!("mod is already installed");
+
+                                if installed_mod.version >= *mod_version {
+                                    println!("mod is not newer than installed mod");
+                                    continue;
+                                } else {
+                                    println!("mod is newer than installed mod");
+                                }
+                            }
+
+                            println!("mod is not already installed");
+                            tasks
+                                .push(install_mod(r#mod, progress.add(ProgressBar::new_spinner())));
+                        }
+                        None => println!("mod does not have version"),
+                    }
+                } else {
+                    println!("mod does not support Android");
+                }
+            }
+            None => println!("mod does not have file"),
+        }
+    }
+
+    try_join_all(tasks).await?;
+
+    println!("iterated over subscribed mods\ndone");
+
+    // ###################################################################
+
     // let reqwest_client = reqwest::Client::new();
 
     // for modio_mod in subscriptions {
@@ -132,6 +192,5 @@ async fn main() {
         }
 
         println!("error: {err}");
-        return;
     }
 }
