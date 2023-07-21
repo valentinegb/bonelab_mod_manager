@@ -17,4 +17,5 @@ postcard = "1.0.4"
 reqwest = "0.11.18"
 serde = { version = "1.0.171", features = ["derive"] }
 tokio = { version = "1.29.1", features = ["full"] }
+wrapping_error = "0.1.0"
 zip = "0.6.6"

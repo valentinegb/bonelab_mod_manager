@@ -2,10 +2,11 @@ use std::io;
 
 use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
 use modio::{Credentials, Modio};
+use wrapping_error::wrapping_error;
 
 use crate::app_data;
 
-enum_error!(Error {
+wrapping_error!(pub(super) Error {
     Modio(modio::Error),
     AppData(app_data::Error),
     Io(io::Error),

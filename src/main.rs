@@ -10,13 +10,13 @@
 // - update `installed_mods` in app data when finished installing a mod
 // - fix not being able to see both Android and Windows files
 
-#[macro_use]
-mod error;
 mod app_data;
 mod installation;
 mod modio;
 
 use std::io;
+
+use wrapping_error::wrapping_error;
 
 use crate::app_data::AppData;
 use crate::installation::install_mod;
@@ -24,7 +24,7 @@ use crate::modio::authenticate;
 
 const BONELAB_GAME_ID: u32 = 3809;
 
-enum_error!(Error {
+wrapping_error!(Error {
     AppData(app_data::Error),
     Modio(modio::Error),
     Io(io::Error),

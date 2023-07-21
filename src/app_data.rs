@@ -7,8 +7,9 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
+use wrapping_error::wrapping_error;
 
-enum_error!(Error {
+wrapping_error!(pub(super) Error {
     Io(io::Error),
     Postcard(postcard::Error),
     Var(VarError),

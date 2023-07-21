@@ -101,6 +101,7 @@ dependencies = [
  "reqwest",
  "serde",
  "tokio",
+ "wrapping_error",
  "zip",
 ]
 
@@ -1691,6 +1692,12 @@ checksum = "80d0f4e272c85def139476380b12f9ac60926689dd2e01d4923222f40580869d"
 dependencies = [
  "winapi",
 ]
+
+[[package]]
+name = "wrapping_error"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9af2ac307811111c9ea2badffcdf3065ffd20dd2278cd01993c16654d11d4108"
 
 [[package]]
 name = "zeroize"

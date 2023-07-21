@@ -1,9 +1,10 @@
 use std::{env, io::Cursor, path::PathBuf};
 
 use modio::lib::Url;
+use wrapping_error::wrapping_error;
 use zip::{result::ZipError, ZipArchive};
 
-enum_error!(Error {
+wrapping_error!(Error {
     Reqwest(reqwest::Error),
     Zip(ZipError),
 });
