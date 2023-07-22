@@ -9,40 +9,26 @@ mod authentication;
 mod installation;
 
 use std::collections::HashMap;
-use std::io;
 use std::time::Duration;
 
+use anyhow::Result;
 use console::style;
 use futures::future::try_join_all;
-use indicatif::style::TemplateError;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use modio::mods::Mod;
 use modio::TargetPlatform;
 use modio::{filter::In, mods};
-use tokio::task::JoinError;
-use wrapping_error::wrapping_error;
 
-use crate::app_data::AppData;
 use crate::authentication::authenticate;
 use crate::installation::install_mod;
 
 const BONELAB_GAME_ID: u32 = 3809;
 
-wrapping_error!(Error {
-    AppData(app_data::Error),
-    Authentication(authentication::Error),
-    Io(io::Error),
-    Modio(modio::Error),
-    Join(JoinError),
-    Installation(installation::Error),
-    Template(TemplateError),
-});
-
 async fn check_mod(
     r#mod: Mod,
     installed_mods: &HashMap<u32, String>,
     progress: ProgressBar,
-) -> Result<(), Error> {
+) -> Result<()> {
     progress.enable_steady_tick(Duration::from_millis(120));
     progress.set_style(ProgressStyle::with_template(
         "{spinner:.blue} {prefix} - {msg}",
@@ -108,7 +94,7 @@ async fn check_mod(
     Ok(())
 }
 
-async fn sync_mods() -> Result<(), Error> {
+async fn try_main() -> Result<()> {
     let modio = authenticate().await?;
     let multi_progress = MultiProgress::new();
     let main_progress = multi_progress.add(ProgressBar::new_spinner());
@@ -152,24 +138,26 @@ async fn sync_mods() -> Result<(), Error> {
 
 #[tokio::main]
 async fn main() {
-    if let Err(err) = sync_mods().await {
-        if let Error::Modio(err) = &err {
+    if let Some(err) = try_main().await.err() {
+        if let Some(err) = err.downcast_ref::<modio::Error>() {
             if err.is_auth() {
-                if let Ok(app_data) = app_data::read() {
-                    if let Ok(_) = app_data::write(&AppData {
-                        modio_token: None,
-                        ..app_data
-                    }) {
-                        println!("error: authentication failed, you will need to re-login");
+                if let Ok(mut app_data) = app_data::read() {
+                    app_data.modio_token = None;
+
+                    if let Ok(_) = app_data::write(&app_data) {
+                        eprintln!(
+                            "{}: Authentication failed, you will need to re-login",
+                            style("error").red()
+                        );
                         return;
                     }
                 }
 
-                println!("error: authentication failed");
+                eprintln!("{}: Authentication failed", style("error").red());
                 return;
             }
         }
 
-        println!("error: {err}");
+        eprintln!("{}: {err}", style("error").red());
     }
 }

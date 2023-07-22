@@ -1,24 +1,16 @@
-use std::{env::VarError, io::Cursor};
+use std::io::Cursor;
 
+use anyhow::Result;
 use console::style;
 use futures::StreamExt;
-use indicatif::{style::TemplateError, ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle};
 use modio::mods::Mod;
 use reqwest::get;
-use wrapping_error::wrapping_error;
-use zip::{result::ZipError, ZipArchive};
+use zip::ZipArchive;
 
 use crate::app_data;
 
-wrapping_error!(pub(super) Error {
-    Reqwest(reqwest::Error),
-    Zip(ZipError),
-    Var(VarError),
-    Template(TemplateError),
-    AppData(app_data::Error),
-});
-
-pub(super) async fn install_mod(r#mod: Mod, progress: ProgressBar) -> Result<(), Error> {
+pub(super) async fn install_mod(r#mod: Mod, progress: ProgressBar) -> Result<()> {
     progress.set_message("downloading");
 
     let mod_file = r#mod.modfile.expect("mod should have file");

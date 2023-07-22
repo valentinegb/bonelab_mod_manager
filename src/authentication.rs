@@ -1,18 +1,10 @@
-use std::io;
-
+use anyhow::Result;
 use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
 use modio::{Credentials, Modio};
-use wrapping_error::wrapping_error;
 
 use crate::app_data;
 
-wrapping_error!(pub(super) Error {
-    Modio(modio::Error),
-    AppData(app_data::Error),
-    Io(io::Error),
-});
-
-pub(super) async fn authenticate() -> Result<Modio, Error> {
+pub(super) async fn authenticate() -> Result<Modio> {
     let modio = Modio::new(env!("MODIO_API_KEY"))?;
     let mut app_data = app_data::read()?;
 

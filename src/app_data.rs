@@ -6,14 +6,8 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use wrapping_error::wrapping_error;
-
-wrapping_error!(pub(super) Error {
-    Io(io::Error),
-    Postcard(postcard::Error),
-    Var(VarError),
-});
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct AppData {
@@ -37,7 +31,7 @@ pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
     Ok(PathBuf::from(env::var("AppData")).join("bonelab_mod_manager"))
 }
 
-pub(crate) fn read() -> Result<AppData, Error> {
+pub(crate) fn read() -> Result<AppData> {
     let app_data_path = dir_path()?;
 
     create_dir_all(&app_data_path)?;
@@ -62,7 +56,7 @@ pub(crate) fn read() -> Result<AppData, Error> {
     Ok(postcard::from_bytes(&app_data_bytes?)?)
 }
 
-pub(crate) fn write(app_data: &AppData) -> Result<(), Error> {
+pub(crate) fn write(app_data: &AppData) -> Result<()> {
     let app_data_path = dir_path()?;
 
     create_dir_all(&app_data_path)?;
