@@ -1,8 +1,16 @@
+mod app_data;
+mod authentication;
+
 use anyhow::Result;
+use authentication::authenticate;
 use console::style;
 
 async fn try_main() -> Result<()> {
     // authenticate with mod.io
+    let modio = authenticate().await?;
+
+    println!("Successfully authenticated");
+
     // get subscribed mods
     // spawn a task for each mod
     // for each installed mod, check if it is subscribed
