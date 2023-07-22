@@ -4,6 +4,7 @@
 // - actually push files to Quest headset
 // - fix not being able to see both Android and Windows files (https://github.com/nickelc/modio-rs/issues/4)
 
+mod adb;
 mod app_data;
 mod authentication;
 mod installation;
@@ -13,6 +14,8 @@ use std::time::Duration;
 
 use anyhow::Result;
 use console::style;
+use dialoguer::theme::ColorfulTheme;
+use dialoguer::Confirm;
 use futures::future::try_join_all;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use modio::mods::Mod;
@@ -23,6 +26,7 @@ use crate::authentication::authenticate;
 use crate::installation::install_mod;
 
 const BONELAB_GAME_ID: u32 = 3809;
+const REMOTE_BONELAB_FILES_DIR: &str = "/sdcard/Android/data/com.StressLevelZero.BONELAB/files";
 
 async fn check_mod(
     r#mod: Mod,
@@ -131,7 +135,18 @@ async fn try_main() -> Result<()> {
         "{} {{msg}}",
         style("✔").green()
     ))?);
-    main_progress.finish_with_message("done");
+    main_progress.finish_with_message("checked subscribed mods");
+
+    let push_confirmed = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Do you want to push the mod files to a Quest headset?")
+        .interact()?;
+
+    if push_confirmed {
+        adb::rm(REMOTE_BONELAB_FILES_DIR.to_string() + "/Mods").await?;
+        adb::push(app_data::dir_path()?.join("Mods"), REMOTE_BONELAB_FILES_DIR).await?;
+    }
+
+    println!("{} Done!", style("✔").green());
 
     Ok(())
 }
