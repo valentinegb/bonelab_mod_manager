@@ -1,11 +1,16 @@
 mod app_data;
 mod authentication;
+mod installation;
 
 use anyhow::Result;
 use app_data::AppData;
 use authentication::authenticate;
 use console::style;
+use futures_util::TryStreamExt;
+use indicatif::{MultiProgress, ProgressBar};
+use installation::install_mod;
 use modio::{filter::In, mods};
+use tokio::task::JoinSet;
 
 const BONELAB_GAME_ID: u32 = 3809;
 
@@ -14,13 +19,27 @@ async fn try_main() -> Result<()> {
     let modio = authenticate().await?;
 
     // get subscribed mods
-    let subscriptions = modio
+    let mut subscriptions = modio
         .user()
         .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
-        .collect()
+        .iter()
         .await?;
 
     // spawn a task for each mod
+    let mut set = JoinSet::new();
+    let multi_progress = MultiProgress::new();
+
+    while let Some(subscription) = subscriptions.try_next().await? {
+        set.spawn(install_mod(
+            subscription,
+            multi_progress.add(ProgressBar::new_spinner()),
+        ));
+    }
+
+    while let Some(res) = set.join_next().await {
+        res??;
+    }
+
     // for each installed mod, check if it is subscribed
     // if not subscribed, remove
 

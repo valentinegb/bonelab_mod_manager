@@ -14,6 +14,7 @@ publish = false
 anyhow = "1.0.72"
 console = "0.15.7"
 dialoguer = { version = "0.10.4", default-features = false, features = ["password"] }
+futures-util = { version = "0.3.28", features = ["tokio-io"] }
 indicatif = { version = "0.17.5", features = ["tokio"] }
 modio = "0.8.0"
 postcard = { version = "1.0.6", features = ["use-std"] }
