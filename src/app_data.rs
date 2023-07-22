@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct AppData {
     pub(crate) modio_token: Option<String>,
-    pub(crate) installed_mods: HashMap<u32, String>,
+    pub(crate) installed_mods: HashMap<u32, (String, String)>,
 }
 
 #[cfg(target_os = "macos")]

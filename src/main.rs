@@ -14,8 +14,6 @@ use std::time::Duration;
 
 use anyhow::Result;
 use console::style;
-use dialoguer::theme::ColorfulTheme;
-use dialoguer::Confirm;
 use futures::future::try_join_all;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use modio::mods::Mod;
@@ -26,11 +24,10 @@ use crate::authentication::authenticate;
 use crate::installation::install_mod;
 
 const BONELAB_GAME_ID: u32 = 3809;
-const REMOTE_BONELAB_FILES_DIR: &str = "/sdcard/Android/data/com.StressLevelZero.BONELAB/files";
 
 async fn check_mod(
     r#mod: Mod,
-    installed_mods: &HashMap<u32, String>,
+    installed_mods: &HashMap<u32, (String, String)>,
     progress: ProgressBar,
 ) -> Result<()> {
     progress.enable_steady_tick(Duration::from_millis(120));
@@ -61,7 +58,7 @@ async fn check_mod(
                     Some(mod_version) => {
                         progress.set_message("mod has version");
 
-                        if let Some(installed_mod_version) = installed_mods.get(&r#mod.id) {
+                        if let Some((installed_mod_version, _)) = installed_mods.get(&r#mod.id) {
                             progress.set_message("mod is already installed");
 
                             if installed_mod_version >= mod_version {
@@ -136,15 +133,6 @@ async fn try_main() -> Result<()> {
         style("✔").green()
     ))?);
     main_progress.finish_with_message("checked subscribed mods");
-
-    let push_confirmed = Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Do you want to push the mod files to a Quest headset?")
-        .interact()?;
-
-    if push_confirmed {
-        adb::rm(REMOTE_BONELAB_FILES_DIR.to_string() + "/Mods").await?;
-        adb::push(app_data::dir_path()?.join("Mods"), REMOTE_BONELAB_FILES_DIR).await?;
-    }
 
     println!("{} Done!", style("✔").green());
 

@@ -639,6 +639,7 @@ dependencies = [
  "instant",
  "number_prefix",
  "portable-atomic",
+ "tokio",
  "unicode-width",
 ]
 
