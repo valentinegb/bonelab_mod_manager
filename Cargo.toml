@@ -17,6 +17,5 @@ dialoguer = { version = "0.10.4", default-features = false, features = ["passwor
 indicatif = { version = "0.17.5", features = ["tokio"] }
 modio = "0.8.0"
 postcard = { version = "1.0.6", features = ["use-std"] }
-reqwest = "0.11.18"
 serde = { version = "1.0.174", features = ["derive"] }
 tokio = { version = "1.29.1", features = ["full"] }
