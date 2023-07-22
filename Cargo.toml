@@ -11,3 +11,11 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.72"
+console = "0.15.7"
+dialoguer = { version = "0.10.4", default-features = false, features = ["password"] }
+indicatif = { version = "0.17.5", features = ["tokio"] }
+modio = "0.8.0"
+postcard = { version = "1.0.6", features = ["use-std"] }
+serde = { version = "1.0.174", features = ["derive"] }
+tokio = { version = "1.29.1", features = ["full"] }
