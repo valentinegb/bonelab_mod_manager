@@ -95,6 +95,7 @@ dependencies = [
 name = "bonelab_mod_manager"
 version = "0.1.0"
 dependencies = [
+ "console",
  "dialoguer",
  "futures",
  "indicatif",

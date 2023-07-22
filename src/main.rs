@@ -1,21 +1,22 @@
 // TODO
-// - style terminal text
-//   - tasks (not subtasks) bold, success green, error red, etc.
 // - fix email not sending
-// - fix password input freezing
-// - fix failing to extract specifically my mods (maybe b/c mac?)
+// - fix password input freezing (https://github.com/console-rs/dialoguer/issues/270)
 // - actually push files to Quest headset
-// - update `installed_mods` in app data when finished installing a mod
-// - fix not being able to see both Android and Windows files
+// - fix not being able to see both Android and Windows files (https://github.com/nickelc/modio-rs/issues/4)
 
 mod app_data;
 mod authentication;
 mod installation;
 
+use std::collections::HashMap;
 use std::io;
+use std::time::Duration;
 
+use console::style;
 use futures::future::try_join_all;
-use indicatif::{MultiProgress, ProgressBar};
+use indicatif::style::TemplateError;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use modio::mods::Mod;
 use modio::TargetPlatform;
 use modio::{filter::In, mods};
 use tokio::task::JoinError;
@@ -34,12 +35,87 @@ wrapping_error!(Error {
     Modio(modio::Error),
     Join(JoinError),
     Installation(installation::Error),
+    Template(TemplateError),
 });
+
+async fn check_mod(
+    r#mod: Mod,
+    installed_mods: &HashMap<u32, String>,
+    progress: ProgressBar,
+) -> Result<(), Error> {
+    progress.enable_steady_tick(Duration::from_millis(120));
+    progress.set_style(ProgressStyle::with_template(
+        "{spinner:.blue} {prefix} - {msg}",
+    )?);
+    progress.set_prefix(format!("{} by {}", r#mod.name, r#mod.submitted_by.username));
+
+    let failed_progress_style =
+        ProgressStyle::with_template(&format!("{} {{prefix}} - {{msg}}", style("✘").red()))?;
+
+    match &r#mod.modfile {
+        Some(mod_file) => {
+            progress.set_message("mod has file");
+
+            let mut supports_android = false;
+
+            for platform in &mod_file.platforms {
+                if platform.target.display_name() == TargetPlatform::Android.display_name() {
+                    supports_android = true;
+                }
+            }
+
+            if supports_android {
+                progress.set_message("mod supports Android");
+
+                match &mod_file.version {
+                    Some(mod_version) => {
+                        progress.set_message("mod has version");
+
+                        if let Some(installed_mod_version) = installed_mods.get(&r#mod.id) {
+                            progress.set_message("mod is already installed");
+
+                            if installed_mod_version >= mod_version {
+                                progress.set_style(ProgressStyle::with_template(&format!(
+                                    "{} {{prefix}} - {{msg}}",
+                                    style("✔").green()
+                                ))?);
+                                progress.finish_with_message("mod is not newer than installed mod");
+                                return Ok(());
+                            } else {
+                                progress.set_message("mod is newer than installed mod");
+                            }
+                        }
+
+                        progress.set_message("mod is not already installed");
+                        install_mod(r#mod, progress).await?;
+                    }
+                    None => {
+                        progress.set_style(failed_progress_style);
+                        progress.finish_with_message("mod does not have version");
+                    }
+                }
+            } else {
+                progress.set_style(failed_progress_style);
+                progress.finish_with_message("mod does not support Android");
+            }
+        }
+        None => {
+            progress.set_style(failed_progress_style);
+            progress.finish_with_message("mod does not have file");
+        }
+    }
+
+    Ok(())
+}
 
 async fn sync_mods() -> Result<(), Error> {
     let modio = authenticate().await?;
+    let multi_progress = MultiProgress::new();
+    let main_progress = multi_progress.add(ProgressBar::new_spinner());
 
-    println!("getting subscribed mods...");
+    main_progress.enable_steady_tick(Duration::from_millis(120));
+    main_progress.set_style(ProgressStyle::with_template("{spinner:.blue} {msg}")?);
+    main_progress.set_message("getting subscribed mods");
 
     let mods = modio
         .user()
@@ -47,126 +123,29 @@ async fn sync_mods() -> Result<(), Error> {
         .collect()
         .await?;
 
-    println!("got subscribed mods\ngetting installed mods...");
+    main_progress.set_message("getting installed mods");
 
     let installed_mods = app_data::read()?.installed_mods;
 
-    println!("got installed mods\niterating over subscribed mods...");
+    main_progress.set_message("checking subscribed mods");
 
     let mut tasks = Vec::new();
-    let progress = MultiProgress::new();
 
     for r#mod in mods {
-        println!("mod is {} by {}", r#mod.name, r#mod.submitted_by.username);
-
-        match &r#mod.modfile {
-            Some(mod_file) => {
-                println!("mod has file");
-
-                let mut supports_android = false;
-
-                for platform in &mod_file.platforms {
-                    if platform.target.display_name() == TargetPlatform::Android.display_name() {
-                        supports_android = true;
-                    }
-                }
-
-                if supports_android {
-                    println!("mod supports Android");
-
-                    match &mod_file.version {
-                        Some(mod_version) => {
-                            println!("mod has version");
-
-                            if let Some(installed_mod) = installed_mods.get(&r#mod.id) {
-                                println!("mod is already installed");
-
-                                if installed_mod.version >= *mod_version {
-                                    println!("mod is not newer than installed mod");
-                                    continue;
-                                } else {
-                                    println!("mod is newer than installed mod");
-                                }
-                            }
-
-                            println!("mod is not already installed");
-                            tasks
-                                .push(install_mod(r#mod, progress.add(ProgressBar::new_spinner())));
-                        }
-                        None => println!("mod does not have version"),
-                    }
-                } else {
-                    println!("mod does not support Android");
-                }
-            }
-            None => println!("mod does not have file"),
-        }
+        tasks.push(check_mod(
+            r#mod,
+            &installed_mods,
+            multi_progress.add(ProgressBar::new_spinner()),
+        ));
     }
 
     try_join_all(tasks).await?;
 
-    println!("iterated over subscribed mods\ndone");
-
-    // ###################################################################
-
-    // let reqwest_client = reqwest::Client::new();
-
-    // for modio_mod in subscriptions {
-    //     println!(
-    //         "checking subscribed mod: {} by {}",
-    //         modio_mod.name, modio_mod.submitted_by.username
-    //     );
-
-    //     if modio_mod.id == 2380732 {
-    //         println!("mod is... 7/11, aka hecking huge")
-    //     } else if let Some(mod_file) = modio_mod.modfile {
-    //         let mut approved_for_android = false;
-
-    //         for platform in mod_file.platforms {
-    //             if platform.target.display_name() == TargetPlatform::Android.display_name()
-    //                 && platform.status == PlatformStatus::APPROVED
-    //             {
-    //                 approved_for_android = true;
-    //             }
-    //         }
-
-    //         if approved_for_android {
-    //             let app_data = app_data::read()?;
-
-    //             if app_data.installed_mods.contains_key(&modio_mod.id) {
-    //                 if let Some(mod_file_version) = mod_file.version {
-    //                     if mod_file_version > app_data.installed_mods[&modio_mod.id].version {
-    //                         println!("mod file is newer than intalled mod");
-
-    //                         if let Err(err) =
-    //                             install_mod(&reqwest_client, mod_file.download.binary_url).await
-    //                         {
-    //                             println!("failed to install mod: {err}");
-    //                         }
-    //                     } else {
-    //                         println!("mod file is not newer than intalled mod");
-    //                     }
-    //                 } else {
-    //                     println!("mod file does not have version");
-    //                 }
-    //             } else {
-    //                 println!("mod is not installed");
-
-    //                 if let Err(err) =
-    //                     install_mod(&reqwest_client, mod_file.download.binary_url).await
-    //                 {
-    //                     println!("failed to install mod: {err}");
-    //                 }
-    //             }
-
-    //             continue;
-    //         } else {
-    //             println!("mod file not approved for Android");
-    //         }
-    //     }
-
-    //     println!("skipping");
-    // }
+    main_progress.set_style(ProgressStyle::with_template(&format!(
+        "{} {{msg}}",
+        style("✔").green()
+    ))?);
+    main_progress.finish_with_message("done");
 
     Ok(())
 }

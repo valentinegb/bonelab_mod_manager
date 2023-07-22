@@ -15,31 +15,25 @@ wrapping_error!(pub(super) Error {
     Var(VarError),
 });
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct AppData {
     pub(crate) modio_token: Option<String>,
-    pub(crate) installed_mods: HashMap<u32, InstalledMod>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub(crate) struct InstalledMod {
-    pub(crate) folder: String,
-    pub(crate) version: String,
+    pub(crate) installed_mods: HashMap<u32, String>,
 }
 
 #[cfg(target_os = "macos")]
-fn dir_path() -> Result<PathBuf, VarError> {
+pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
     Ok(PathBuf::from(env::var("HOME")?)
         .join("Library/Application Support/com.valentinegb.bonelab_mod_manager"))
 }
 
 #[cfg(target_os = "linux")]
-fn dir_path() -> Result<PathBuf, VarError> {
+pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
     Ok(PathBuf::from(env::var("HOME")?).join("var/lib/bonelab_mod_manager"))
 }
 
 #[cfg(target_os = "windows")]
-fn dir_path() -> Result<PathBuf, VarError> {
+pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
     Ok(PathBuf::from(env::var("AppData")).join("bonelab_mod_manager"))
 }
 
