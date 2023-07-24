@@ -26,6 +26,7 @@ async fn try_main() -> Result<()> {
         .await?;
 
     // spawn a task for each mod
+    let installed_mods = AppData::read().await?.installed_mods;
     let mut set = JoinSet::new();
     let multi_progress = MultiProgress::new();
 
@@ -33,6 +34,8 @@ async fn try_main() -> Result<()> {
         set.spawn(install_mod(
             subscription,
             multi_progress.add(ProgressBar::new_spinner()),
+            modio.clone(),
+            installed_mods.clone(),
         ));
     }
 

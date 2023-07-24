@@ -14,9 +14,9 @@ pub(crate) struct AppData {
     pub(crate) installed_mods: HashMap<u32, InstalledMod>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct InstalledMod {
-    pub(crate) version: String,
+    pub(crate) date_updated: u64,
     pub(crate) folder: String,
 }
 
