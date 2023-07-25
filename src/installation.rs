@@ -1,10 +1,11 @@
-use std::{borrow::Cow, collections::HashMap, time::Duration};
+use std::{borrow::Cow, collections::HashMap, io::Cursor, path::Path, time::Duration};
 
 use anyhow::{anyhow, Result};
 use console::style;
 use futures_util::TryStreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use modio::{mods::Mod, DownloadAction, Modio, TargetPlatform};
+use zip::ZipArchive;
 
 use crate::app_data::{AppData, InstalledMod};
 
@@ -87,15 +88,39 @@ async fn _install_mod(
         progress_bar.inc(chunk.len() as u64);
     }
 
-    // TODO: extract and push to headset
+    progress_bar.set_style(ProgressStyle::with_template(
+        "{spinner:.blue} {prefix} - {msg}",
+    )?);
+    progress_bar.set_message("Extracting");
 
+    let mut archive = ZipArchive::new(Cursor::new(bytes))?;
+
+    archive.extract(AppData::dir_path()?.join("Mods"))?;
+
+    let folder = Path::new(
+        archive
+            .file_names()
+            .take(1)
+            .collect::<Vec<&str>>()
+            .first()
+            .ok_or(anyhow!("Mod file archive is empty"))?,
+    )
+    .ancestors()
+    .last()
+    .ok_or(anyhow!(
+        "File or directory in mod file archive does not have any ancestors"
+    ))?
+    .as_os_str()
+    .to_os_string();
     let mut app_data = AppData::read().await?;
+
+    // TODO: push to headset
 
     app_data.installed_mods.insert(
         r#mod.id,
         InstalledMod {
             date_updated: r#mod.date_updated,
-            folder: "PLACEHOLDER".to_string(),
+            folder,
         },
     );
     app_data.write().await?;

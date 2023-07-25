@@ -2,6 +2,8 @@ mod app_data;
 mod authentication;
 mod installation;
 
+use std::env;
+
 use anyhow::Result;
 use app_data::AppData;
 use authentication::authenticate;
@@ -71,6 +73,13 @@ async fn main() {
                             return;
                         }
                     }
+                }
+            }
+
+            if let Ok(backtrace) = env::var("RUST_BACKTRACE") {
+                if backtrace == "1" {
+                    eprintln!("{}: {err:#}\n{}", style("Error").red(), err.backtrace());
+                    return;
                 }
             }
 

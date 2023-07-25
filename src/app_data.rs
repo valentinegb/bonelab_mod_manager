@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     env::{self, VarError},
+    ffi::OsString,
     path::PathBuf,
 };
 
@@ -17,7 +18,7 @@ pub(crate) struct AppData {
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct InstalledMod {
     pub(crate) date_updated: u64,
-    pub(crate) folder: String,
+    pub(crate) folder: OsString,
 }
 
 // PLEASE MAKE EXTRA EXTRA SURE THAT YOU DELETE THIS AND DELETE THE TOKEN BEFORE PUBLISHING
@@ -35,7 +36,7 @@ impl AppData {
     const REL_DIR_PATH: &str = "Library/Application Support/com.valentinegb.bonelab_mod_manager";
     // TODO: add relative directory paths for Linux and Windows
 
-    fn dir_path() -> Result<PathBuf, VarError> {
+    pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
         Ok(PathBuf::from(env::var("HOME")?).join(Self::REL_DIR_PATH))
     }
 
@@ -63,6 +64,9 @@ impl AppData {
         if app_data
             .as_ref()
             .is_err_and(|err| *err == postcard::Error::DeserializeUnexpectedEnd)
+            || app_data
+                .as_ref()
+                .is_err_and(|err| *err == postcard::Error::SerdeDeCustom)
         {
             return Ok(Self::write_default().await?);
         }
