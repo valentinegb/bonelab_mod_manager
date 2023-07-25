@@ -131,4 +131,6 @@ async fn main() {
             eprintln!("{}: {err:#}", style("Error").red());
         }
     }
+
+    wait_to_quit()
 }
