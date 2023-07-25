@@ -45,7 +45,7 @@ async fn _install_mod(
 ) -> Result<impl Into<Cow<'static, str>>> {
     progress_bar.enable_steady_tick(Duration::from_millis(120));
     progress_bar.set_style(ProgressStyle::with_template(
-        "{spinner:.blue} {prefix} - {msg}",
+        "{spinner:.cyan} {prefix} - {msg}",
     )?);
     progress_bar.set_prefix(format!("{} by {}", r#mod.name, r#mod.submitted_by.username));
     progress_bar.set_message("Checking");
@@ -75,7 +75,7 @@ async fn _install_mod(
         .await?;
 
     progress_bar.set_style(ProgressStyle::with_template(
-        "{spinner:.blue} {prefix} - {msg} {wide_bar} {bytes}/{total_bytes} ({eta})",
+        "{spinner:.cyan} {prefix} - {msg} {wide_bar} {bytes}/{total_bytes} ({eta})",
     )?);
     progress_bar.set_length(downloader.content_length().ok_or(anyhow!(
         "Mod file HTTP response did not provide content length"
@@ -91,7 +91,7 @@ async fn _install_mod(
     }
 
     progress_bar.set_style(ProgressStyle::with_template(
-        "{spinner:.blue} {prefix} - {msg}",
+        "{spinner:.cyan} {prefix} - {msg}",
     )?);
     progress_bar.set_message("Extracting");
 

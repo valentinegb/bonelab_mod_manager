@@ -1,13 +1,19 @@
+use std::env;
+
 use anyhow::{anyhow, bail, Result};
+use console::style;
 use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
+use keyring::Entry;
 use modio::{Credentials, Modio};
 
-use crate::app_data::AppData;
-
 pub(super) async fn authenticate() -> Result<Modio> {
-    let mut app_data = AppData::read().await?;
+    #[cfg(target_family = "unix")]
+    let user = env::var("USER");
+    #[cfg(target_os = "windows")]
+    let user = env::var("USERNAME");
+    let entry = Entry::new("bonelab_mod_manager", &user?)?;
 
-    if let Some(modio_token) = app_data.modio_token {
+    if let Ok(modio_token) = entry.get_password() {
         return Ok(Modio::new(Credentials::with_token(
             env!("MODIO_API_KEY"),
             modio_token,
@@ -37,25 +43,25 @@ pub(super) async fn authenticate() -> Result<Modio> {
                 .interact_text()?;
             let credentials = modio.auth().security_code(&code).await?;
 
-            app_data.modio_token = Some(
+            entry.set_password(
                 credentials
                     .token
                     .as_ref()
                     .ok_or(anyhow!("Credentials missing token"))?
                     .value
-                    .clone(),
-            );
-            app_data.write().await?;
+                    .as_ref(),
+            )?;
 
             Ok(modio.with_credentials(credentials))
         }
         1 => {
+            println!("{}: there may be a bug with a dependency (dialoguer) preventing you from entering your token. Sorry!", style("Warning").yellow());
+
             let token = Password::with_theme(&ColorfulTheme::default())
                 .with_prompt("Enter your token")
                 .interact()?;
 
-            app_data.modio_token = Some(token.clone());
-            app_data.write().await?;
+            entry.set_password(token.as_ref())?;
 
             Ok(Modio::new(Credentials::with_token(
                 env!("MODIO_API_KEY"),

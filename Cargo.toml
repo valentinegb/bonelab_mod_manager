@@ -16,6 +16,7 @@ console = "0.15.7"
 dialoguer = { version = "0.10.4", default-features = false, features = ["password"] }
 futures-util = { version = "0.3.28", features = ["tokio-io"] }
 indicatif = { version = "0.17.5", features = ["tokio"] }
+keyring = "2.0.5"
 modio = { git = "https://github.com/valentinegb/modio-rs.git", branch = "downloader-content-length" }
 postcard = { version = "1.0.6", features = ["use-std"] }
 serde = { version = "1.0.174", features = ["derive"] }
