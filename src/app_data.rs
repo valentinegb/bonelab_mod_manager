@@ -34,10 +34,18 @@ impl Default for AppData {
 impl AppData {
     #[cfg(target_os = "macos")]
     const REL_DIR_PATH: &str = "Library/Application Support/com.valentinegb.bonelab_mod_manager";
-    // TODO: add relative directory paths for Linux and Windows
+    #[cfg(target_os = "windows")]
+    const REL_DIR_PATH: &str = "bonelab_mod_manager";
+    // TODO: add relative directory paths for Linux
 
+    #[cfg(target_family = "unix")]
     pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
         Ok(PathBuf::from(env::var("HOME")?).join(Self::REL_DIR_PATH))
+    }
+
+    #[cfg(target_os = "windows")]
+    pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
+        Ok(PathBuf::from(env::var("AppData")?).join(Self::REL_DIR_PATH))
     }
 
     fn path() -> Result<PathBuf, VarError> {
