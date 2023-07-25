@@ -84,7 +84,7 @@ async fn try_main() -> Result<()> {
 }
 
 fn wait_to_quit() {
-    let term = Term::buffered_stdout();
+    let term = Term::stdout();
 
     term.write_line(&style("Press q to quit").bold().to_string())
         .unwrap();
