@@ -14,7 +14,7 @@ pub(crate) async fn install_mod(
     progress_bar: ProgressBar,
     modio: Modio,
     installed_mods: HashMap<u32, InstalledMod>,
-) -> Result<()> {
+) -> Result<bool> {
     match _install_mod(r#mod, progress_bar.clone(), modio, installed_mods).await {
         Ok(msg) => {
             progress_bar.set_style(ProgressStyle::with_template(&format!(
@@ -22,6 +22,8 @@ pub(crate) async fn install_mod(
                 style("✔").green()
             ))?);
             progress_bar.finish_with_message(msg);
+
+            Ok(true)
         }
         Err(err) => {
             progress_bar.set_style(ProgressStyle::with_template(&format!(
@@ -29,10 +31,10 @@ pub(crate) async fn install_mod(
                 style("✘").red()
             ))?);
             progress_bar.finish_with_message(format!("{}: {err:#}", style("Error").red()));
+
+            Ok(false)
         }
     }
-
-    Ok(())
 }
 
 async fn _install_mod(

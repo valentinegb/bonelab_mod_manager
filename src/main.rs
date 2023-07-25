@@ -64,9 +64,21 @@ async fn try_main() -> Result<()> {
         ));
     }
 
+    let mut successful = 0;
+    let mut unsuccessful = 0;
+
     while let Some(res) = set.join_next().await {
-        res??;
+        match res?? {
+            true => successful += 1,
+            false => unsuccessful += 1,
+        }
     }
+
+    println!(
+        "{} mods were installed successfully and {} mods were unsuccessful",
+        style(successful).green(),
+        style(unsuccessful).red()
+    );
 
     Ok(())
 }
