@@ -7,7 +7,7 @@ use std::env;
 use anyhow::Result;
 use app_data::AppData;
 use authentication::authenticate;
-use console::style;
+use console::{style, Key, Term};
 use indicatif::{MultiProgress, ProgressBar};
 use installation::install_mod;
 use modio::{filter::In, mods};
@@ -83,6 +83,19 @@ async fn try_main() -> Result<()> {
     Ok(())
 }
 
+fn wait_to_quit() {
+    let term = Term::buffered_stdout();
+
+    term.write_line(&style("Press q to quit").bold().to_string())
+        .unwrap();
+
+    loop {
+        if term.read_key().unwrap() == Key::Char('q') {
+            break;
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     match try_main().await {
@@ -102,7 +115,7 @@ async fn main() {
                                 style("Error").red()
                             );
 
-                            return;
+                            return wait_to_quit();
                         }
                     }
                 }
@@ -111,7 +124,7 @@ async fn main() {
             if let Ok(backtrace) = env::var("RUST_BACKTRACE") {
                 if backtrace == "1" {
                     eprintln!("{}: {err:#}\n{}", style("Error").red(), err.backtrace());
-                    return;
+                    return wait_to_quit();
                 }
             }
 
