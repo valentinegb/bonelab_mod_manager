@@ -8,11 +8,10 @@ use anyhow::Result;
 use app_data::AppData;
 use authentication::authenticate;
 use console::style;
-use futures_util::TryStreamExt;
 use indicatif::{MultiProgress, ProgressBar};
 use installation::install_mod;
 use modio::{filter::In, mods};
-use tokio::task::JoinSet;
+use tokio::{fs::remove_dir_all, task::JoinSet};
 
 const BONELAB_GAME_ID: u32 = 3809;
 
@@ -21,18 +20,42 @@ async fn try_main() -> Result<()> {
     let modio = authenticate().await?;
 
     // get subscribed mods
-    let mut subscriptions = modio
+    let subscriptions = modio
         .user()
         .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
-        .iter()
+        .collect()
         .await?;
 
-    // spawn a task for each mod
+    // remove installed mod if not subscribed
     let installed_mods = AppData::read().await?.installed_mods;
+    let mut removed_mods = 0;
+
+    for (installed_mod_id, installed_mod) in &installed_mods {
+        if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(installed_mod_id)) {
+            remove_dir_all(
+                AppData::dir_path()?
+                    .join("Mods")
+                    .join(&installed_mod.folder),
+            )
+            .await?;
+
+            removed_mods += 1;
+        }
+    }
+
+    match removed_mods {
+        0 => (),
+        1 => println!("1 installed mod was removed because it is no longer subscribed to"),
+        removed_mods => println!(
+            "{removed_mods} installed mods were removed because they are no longer subscribed to"
+        ),
+    }
+
+    // spawn a task for each mod
     let mut set = JoinSet::new();
     let multi_progress = MultiProgress::new();
 
-    while let Some(subscription) = subscriptions.try_next().await? {
+    for subscription in subscriptions {
         set.spawn(install_mod(
             subscription,
             multi_progress.add(ProgressBar::new_spinner()),
@@ -44,9 +67,6 @@ async fn try_main() -> Result<()> {
     while let Some(res) = set.join_next().await {
         res??;
     }
-
-    // for each installed mod, check if it is subscribed
-    // if not subscribed, remove
 
     Ok(())
 }
