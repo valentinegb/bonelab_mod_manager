@@ -75,7 +75,7 @@ async fn try_main() -> Result<()> {
     }
 
     println!(
-        "{} mods were installed successfully and {} mods were unsuccessful",
+        "{} successful and {} unsuccessful",
         style(successful).green(),
         style(unsuccessful).red()
     );
