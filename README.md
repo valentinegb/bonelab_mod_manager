@@ -2,9 +2,12 @@
 
 Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
-![Screenshot 2023-07-26 at 3 16 07 PM](https://github.com/valentinegb/bonelab_mod_manager/assets/35977727/3ba202ab-97be-4c0c-9933-58eb8d30f2d9)
+![Screenshot 2023-07-26 at 8 04 39 PM](https://github.com/valentinegb/bonelab_mod_manager/assets/35977727/7368827d-fa1f-4f81-ae86-2a3e53597242)
 
-<h6 align="center">Better screenshot coming soon</h6>
+<h6 align="center">
+  The ETA is a bit underconfident since it doesn't account for download speeds improving as other mods finish downloading.
+  Also, my computer's download speed is normally around 1 MB/s lol
+</h6>
 
 ## Features
 
