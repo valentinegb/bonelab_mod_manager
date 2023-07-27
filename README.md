@@ -25,7 +25,7 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
 ## How to Use
 
-1. Download the appropriate file from [Releases](https://github.com/valentinegb/bonelab_mod_manager/releases) for your OS.
+1. Download the appropriate file from the [latest release](https://github.com/valentinegb/bonelab_mod_manager/releases/latest) for your OS.
 2. Launch the program, by double clicking or other method.
   - If you're on Windows, you may be prevented from launching the program by a popup warning you that the program is not safe.
     It is, and if you don't believe me you can check the code yourself. To launch the program anyway, click "More info" then "Run anyway".
