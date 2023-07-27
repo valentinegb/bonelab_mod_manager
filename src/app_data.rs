@@ -11,6 +11,7 @@ use tokio::fs;
 
 #[derive(Serialize, Deserialize, Default)]
 pub(crate) struct AppData {
+    pub(crate) keyring_entries: u8,
     pub(crate) installed_mods: HashMap<u32, InstalledMod>,
 }
 
