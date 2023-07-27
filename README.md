@@ -42,9 +42,9 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
 Mods are installed in a directory dependent on your OS.
 
-macOS: `$HOME/Library/Application Support/com.valentinegb.bonelab_mod_manager/Mods`
+macOS: `~/Library/Application Support/com.valentinegb.bonelab_mod_manager/Mods`
 
-Linux: `$HOME/var/lib/bonelab_mod_manager/Mods`
+Linux: `~/var/lib/bonelab_mod_manager/Mods`
 
 Windows: `%AppData%/bonelab_mod_manager/Mods`
 
