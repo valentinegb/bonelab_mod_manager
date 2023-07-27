@@ -23,6 +23,8 @@ pub(crate) struct InstalledMod {
 impl AppData {
     #[cfg(target_os = "macos")]
     const REL_DIR_PATH: &str = "Library/Application Support/com.valentinegb.bonelab_mod_manager";
+    #[cfg(target_os = "linux")]
+    const REL_DIR_PATH: &str = "var/lib/bonelab_mod_manager";
     #[cfg(target_os = "windows")]
     const REL_DIR_PATH: &str = "bonelab_mod_manager";
     // TODO: add relative directory paths for Linux

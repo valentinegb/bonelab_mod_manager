@@ -10,6 +10,7 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
 - Multi-platform
   - macOS
+  - Linux
   - Windows
 - Parallel downloads
 - Installs subscribed mod.io mods
@@ -19,7 +20,6 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
 ## Roadmap
 
-- Linux support
 - Install mods directly in PC Bonelab installation
 - Use ADB to push mods to Quest headset if plugged in
 
