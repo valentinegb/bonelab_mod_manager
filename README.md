@@ -35,3 +35,16 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 3. On your first time running, you will be prompted to sign in to mod.io. Use the arrow keys to select your method of signing in then press enter.
 4. After signing in, the program will do the rest for you! Sit back, relax, and watch as all your mods are downloaded and installed.
 5. Next time you want to sync your installed mods, just run the program again.
+
+## Mod Installation Path
+
+Mods are installed in a directory dependent on your OS.
+
+macOS: `$HOME/Library/Application Support/com.valentinegb.bonelab_mod_manager/Mods`
+
+Linux: `$HOME/var/lib/bonelab_mod_manager/Mods`
+
+Windows: `%AppData%/bonelab_mod_manager/Mods`
+
+I know, it isn't ideal having to move the mods from this folder to your actual Bonelab mods folder,
+but it's on the roadmap for the mod manager to do that for you, it will in the future!
