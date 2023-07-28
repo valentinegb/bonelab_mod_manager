@@ -22,11 +22,7 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 - Removes unsubscribed mods
 - Built with [Rust](http://rust-lang.org)
 
-## Roadmap
-
-- Windows mod support
-- Install mods directly in PC Bonelab installation
-- Use ADB to push mods to Quest headset if plugged in
+You can see this project's backlog [here](https://github.com/users/valentinegb/projects/4).
 
 ## How to Use
 
