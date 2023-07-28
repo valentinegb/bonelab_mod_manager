@@ -50,15 +50,11 @@ pub(super) async fn set_split_password(password: &str) -> Result<()> {
         let entry = Entry::new("bonelab_mod_manager", &format!("{user}-{i}"))?;
 
         if remaining_password.len() <= platform_limit {
-            dbg!(remaining_password);
-
             entry.set_password(remaining_password)?;
 
             break;
         } else {
-            let (under, over) = remaining_password.split_at(platform_limit);
-
-            dbg!(under.len(), over.len());
+            let (under, over) = password.split_at(platform_limit);
 
             entry.set_password(under)?;
 
