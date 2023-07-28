@@ -6,10 +6,11 @@ use std::env;
 
 use anyhow::Result;
 use app_data::AppData;
-use authentication::{authenticate, delete_split_password};
+use authentication::authenticate;
 use console::{style, Key, Term};
 use indicatif::{MultiProgress, ProgressBar};
 use installation::install_mod;
+use keyring::Entry;
 use modio::{filter::In, mods};
 use tokio::{fs::remove_dir_all, task::JoinSet};
 
@@ -106,13 +107,22 @@ async fn main() {
         Err(err) => {
             if let Some(err) = err.downcast_ref::<modio::Error>() {
                 if err.is_auth() {
-                    if let Ok(_) = delete_split_password().await {
-                        eprintln!(
-                            "{}: Authentication failed, you have been signed out",
-                            style("Error").red()
-                        );
+                    #[cfg(target_family = "unix")]
+                    let user = env::var("USER");
+                    #[cfg(target_os = "windows")]
+                    let user = env::var("USERNAME");
 
-                        return wait_to_quit();
+                    if let Ok(user) = user {
+                        if let Ok(entry) = Entry::new("bonelab_mod_manager", &user) {
+                            if let Ok(_) = entry.delete_password() {
+                                eprintln!(
+                                    "{}: Authentication failed, you have been signed out",
+                                    style("Error").red()
+                                );
+
+                                return wait_to_quit();
+                            }
+                        }
                     }
                 }
             }
