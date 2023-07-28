@@ -11,6 +11,8 @@ use tokio::fs;
 
 #[derive(Serialize, Deserialize, Default)]
 pub(crate) struct AppData {
+    #[cfg(target_os = "windows")]
+    pub(crate) modio_token: Option<String>,
     pub(crate) installed_mods: HashMap<u32, InstalledMod>,
 }
 

@@ -1,19 +1,64 @@
 use std::env;
 
+#[cfg(target_os = "windows")]
+use crate::app_data::AppData;
 use anyhow::{anyhow, bail, Result};
 use console::style;
 use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
+#[cfg(target_family = "unix")]
 use keyring::Entry;
 use modio::{Credentials, Modio};
 
-pub(super) async fn authenticate() -> Result<Modio> {
-    #[cfg(target_family = "unix")]
-    let user = env::var("USER");
-    #[cfg(target_os = "windows")]
-    let user = env::var("USERNAME");
-    let entry = Entry::new("bonelab_mod_manager", &user?)?;
+#[cfg(target_family = "unix")]
+async fn get_password() -> Result<String> {
+    let entry = Entry::new("bonelab_mod_manager", &env::var("USER")?)?;
 
-    if let Ok(modio_token) = entry.get_password() {
+    Ok(entry.get_password()?)
+}
+
+#[cfg(target_os = "windows")]
+async fn get_password() -> Result<String> {
+    let app_data = AppData::read().await?;
+
+    app_data
+        .modio_token
+        .ok_or(anyhow!("User does not have mod.io token"))
+}
+
+#[cfg(target_family = "unix")]
+async fn set_password(password: &str) -> Result<()> {
+    let entry = Entry::new("bonelab_mod_manager", &env::var("USER")?)?;
+
+    Ok(entry.set_password(password)?)
+}
+
+#[cfg(target_os = "windows")]
+async fn set_password(password: &str) -> Result<()> {
+    let mut app_data = AppData::read().await?;
+
+    app_data.modio_token = Some(password.to_string());
+
+    Ok(app_data.write().await?)
+}
+
+#[cfg(target_family = "unix")]
+pub(super) async fn delete_password() -> Result<()> {
+    let entry = Entry::new("bonelab_mod_manager", &env::var("USER")?)?;
+
+    Ok(entry.delete_password()?)
+}
+
+#[cfg(target_os = "windows")]
+pub(super) async fn delete_password() -> Result<()> {
+    let mut app_data = AppData::read().await?;
+
+    app_data.modio_token = None;
+
+    Ok(app_data.write().await?)
+}
+
+pub(super) async fn authenticate() -> Result<Modio> {
+    if let Ok(modio_token) = get_password().await {
         return Ok(Modio::new(Credentials::with_token(
             env!("MODIO_API_KEY"),
             modio_token,
@@ -43,14 +88,15 @@ pub(super) async fn authenticate() -> Result<Modio> {
                 .interact_text()?;
             let credentials = modio.auth().security_code(&code).await?;
 
-            entry.set_password(
+            set_password(
                 credentials
                     .token
                     .as_ref()
                     .ok_or(anyhow!("Credentials missing token"))?
                     .value
                     .as_ref(),
-            )?;
+            )
+            .await?;
 
             Ok(modio.with_credentials(credentials))
         }
@@ -61,7 +107,7 @@ pub(super) async fn authenticate() -> Result<Modio> {
                 .with_prompt("Enter your token")
                 .interact()?;
 
-            entry.set_password(token.as_ref())?;
+            set_password(token.as_ref()).await?;
 
             Ok(Modio::new(Credentials::with_token(
                 env!("MODIO_API_KEY"),
