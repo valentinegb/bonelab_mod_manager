@@ -8,12 +8,14 @@ use anyhow::Result;
 use app_data::AppData;
 use authentication::{authenticate, delete_password};
 use console::{style, Key, Term};
+#[cfg(target_os = "windows")]
 use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar};
 use installation::install_mod;
 use modio::{filter::In, mods};
 use tokio::{fs::remove_dir_all, task::JoinSet};
 
+#[cfg(target_os = "windows")]
 use crate::app_data::BonelabPlatform;
 
 const BONELAB_GAME_ID: u32 = 3809;
@@ -25,6 +27,7 @@ async fn try_main() -> Result<()> {
     // choose platform
     let mut app_data = AppData::read().await?;
 
+    #[cfg(target_os = "windows")]
     if let None = app_data.platform {
         let select = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Which platform do you play Bonelab on?")
@@ -49,12 +52,7 @@ async fn try_main() -> Result<()> {
 
     for (installed_mod_id, installed_mod) in app_data.installed_mods.clone() {
         if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&installed_mod_id)) {
-            remove_dir_all(
-                AppData::dir_path()?
-                    .join("Mods")
-                    .join(&installed_mod.folder),
-            )
-            .await?;
+            remove_dir_all(app_data.mods_dir_path()?.join(&installed_mod.folder)).await?;
 
             app_data.installed_mods.remove(&installed_mod_id);
 

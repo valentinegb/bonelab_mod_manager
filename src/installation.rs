@@ -7,7 +7,9 @@ use indicatif::{ProgressBar, ProgressStyle};
 use modio::{mods::Mod, DownloadAction, Modio, TargetPlatform};
 use zip::ZipArchive;
 
-use crate::app_data::{AppData, BonelabPlatform, InstalledMod};
+#[cfg(target_os = "windows")]
+use crate::app_data::BonelabPlatform;
+use crate::app_data::{AppData, InstalledMod};
 
 pub(crate) async fn install_mod(
     r#mod: Mod,
@@ -56,15 +58,19 @@ async fn _install_mod(
         }
     }
 
+    #[cfg(target_os = "windows")]
     let platform = AppData::read()
         .await?
         .platform
         .ok_or(anyhow!("Platform is not set"))?;
+    #[cfg(target_os = "windows")]
     let target_platform = match platform {
         BonelabPlatform::Windows => TargetPlatform::Windows,
         BonelabPlatform::Quest => TargetPlatform::Android,
     }
     .display_name();
+    #[cfg(target_family = "unix")]
+    let target_platform = TargetPlatform::Android.display_name();
 
     let mut file_id = None;
 
@@ -75,7 +81,10 @@ async fn _install_mod(
         }
     }
 
+    #[cfg(target_os = "windows")]
     let file_id = file_id.ok_or(anyhow!("Mod does not have {platform} mod file"))?;
+    #[cfg(target_family = "unix")]
+    let file_id = file_id.ok_or(anyhow!("Mod does not have Quest mod file"))?;
     let downloader = modio
         .download(DownloadAction::File {
             game_id: r#mod.game_id,
@@ -107,7 +116,7 @@ async fn _install_mod(
 
     let mut archive = ZipArchive::new(Cursor::new(bytes))?;
 
-    archive.extract(AppData::dir_path()?.join("Mods"))?;
+    archive.extract(AppData::read().await?.mods_dir_path()?)?;
 
     let folder = Path::new(
         archive

@@ -1,12 +1,15 @@
+#[cfg(target_os = "windows")]
+use std::fmt::{self, Display, Formatter};
 use std::{
     collections::HashMap,
     env::{self, VarError},
     ffi::OsString,
-    fmt::{self, Display, Formatter},
     path::PathBuf,
 };
 
-use anyhow::{anyhow, Result};
+#[cfg(target_os = "windows")]
+use anyhow::anyhow;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -14,16 +17,19 @@ use tokio::fs;
 pub(crate) struct AppData {
     #[cfg(target_os = "windows")]
     pub(crate) modio_token: Option<String>,
+    #[cfg(target_os = "windows")]
     pub(crate) platform: Option<BonelabPlatform>,
     pub(crate) installed_mods: HashMap<u32, InstalledMod>,
 }
 
+#[cfg(target_os = "windows")]
 #[derive(Serialize, Deserialize)]
 pub(crate) enum BonelabPlatform {
     Windows,
     Quest,
 }
 
+#[cfg(target_os = "windows")]
 impl TryFrom<usize> for BonelabPlatform {
     type Error = anyhow::Error;
 
@@ -38,6 +44,7 @@ impl TryFrom<usize> for BonelabPlatform {
     }
 }
 
+#[cfg(target_os = "windows")]
 impl Display for BonelabPlatform {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
@@ -67,17 +74,37 @@ impl AppData {
     // TODO: add relative directory paths for Linux
 
     #[cfg(target_family = "unix")]
-    pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
+    fn dir_path() -> Result<PathBuf, VarError> {
         Ok(PathBuf::from(env::var("HOME")?).join(Self::REL_DIR_PATH))
     }
 
     #[cfg(target_os = "windows")]
-    pub(crate) fn dir_path() -> Result<PathBuf, VarError> {
+    fn dir_path() -> Result<PathBuf, VarError> {
         Ok(PathBuf::from(env::var("AppData")?).join(Self::REL_DIR_PATH))
     }
 
     fn path() -> Result<PathBuf, VarError> {
         Ok(Self::dir_path()?.join("app_data"))
+    }
+
+    #[cfg(target_os = "windows")]
+    pub(crate) fn mods_dir_path(&self) -> Result<PathBuf> {
+        match self
+            .platform
+            .as_ref()
+            .ok_or(anyhow!("Platform is not set"))?
+        {
+            BonelabPlatform::Windows => Ok(PathBuf::from(env::var("AppData")?)
+                .parent()
+                .ok_or(anyhow!("AppData env var value does not have parent"))?
+                .join("Locallow/Stress Level Zero/Bonelab/Mods")),
+            BonelabPlatform::Quest => Ok(Self::dir_path()?.join("Mods")),
+        }
+    }
+
+    #[cfg(target_family = "unix")]
+    pub(crate) fn mods_dir_path(&self) -> Result<PathBuf> {
+        Ok(Self::dir_path()?.join("Mods"))
     }
 
     async fn write_default() -> Result<Self> {
