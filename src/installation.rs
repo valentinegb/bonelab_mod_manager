@@ -7,7 +7,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use modio::{mods::Mod, DownloadAction, Modio, TargetPlatform};
 use zip::ZipArchive;
 
-use crate::app_data::{AppData, InstalledMod};
+use crate::app_data::{AppData, BonelabPlatform, InstalledMod};
 
 pub(crate) async fn install_mod(
     r#mod: Mod,
@@ -56,16 +56,26 @@ async fn _install_mod(
         }
     }
 
+    let platform = AppData::read()
+        .await?
+        .platform
+        .ok_or(anyhow!("Platform is not set"))?;
+    let target_platform = match platform {
+        BonelabPlatform::Windows => TargetPlatform::Windows,
+        BonelabPlatform::Quest => TargetPlatform::Android,
+    }
+    .display_name();
+
     let mut file_id = None;
 
     for platform in r#mod.platforms {
-        if platform.target.display_name() == TargetPlatform::Android.display_name() {
+        if platform.target.display_name() == target_platform {
             file_id = Some(platform.modfile_id);
             break;
         }
     }
 
-    let file_id = file_id.ok_or(anyhow!("Mod does not have Android mod file"))?;
+    let file_id = file_id.ok_or(anyhow!("Mod does not have {platform} mod file"))?;
     let downloader = modio
         .download(DownloadAction::File {
             game_id: r#mod.game_id,

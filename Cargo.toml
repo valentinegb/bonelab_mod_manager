@@ -1,6 +1,6 @@
 [package]
 name = "bonelab_mod_manager"
-version = "0.1.1"
+version = "0.2.0-alpha.1"
 authors = ["Valentine Briese <valentinegb@icloud.com>"]
 edition = "2021"
 description = "Keeps your installed Bonelab mods synced with your subscribed mod.io mods."

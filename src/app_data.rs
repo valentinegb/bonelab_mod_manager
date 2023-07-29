@@ -2,10 +2,11 @@ use std::{
     collections::HashMap,
     env::{self, VarError},
     ffi::OsString,
+    fmt::{self, Display, Formatter},
     path::PathBuf,
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -13,7 +14,41 @@ use tokio::fs;
 pub(crate) struct AppData {
     #[cfg(target_os = "windows")]
     pub(crate) modio_token: Option<String>,
+    pub(crate) platform: Option<BonelabPlatform>,
     pub(crate) installed_mods: HashMap<u32, InstalledMod>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub(crate) enum BonelabPlatform {
+    Windows,
+    Quest,
+}
+
+impl TryFrom<usize> for BonelabPlatform {
+    type Error = anyhow::Error;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Windows),
+            1 => Ok(Self::Quest),
+            other => Err(anyhow!(
+                "BonelabPlatform only accepts values equal to 0 or 1, got {other}"
+            )),
+        }
+    }
+}
+
+impl Display for BonelabPlatform {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Windows => "Windows",
+                Self::Quest => "Quest",
+            }
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]

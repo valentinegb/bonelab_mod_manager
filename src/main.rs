@@ -8,16 +8,34 @@ use anyhow::Result;
 use app_data::AppData;
 use authentication::{authenticate, delete_password};
 use console::{style, Key, Term};
+use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar};
 use installation::install_mod;
 use modio::{filter::In, mods};
 use tokio::{fs::remove_dir_all, task::JoinSet};
+
+use crate::app_data::BonelabPlatform;
 
 const BONELAB_GAME_ID: u32 = 3809;
 
 async fn try_main() -> Result<()> {
     // authenticate with mod.io
     let modio = authenticate().await?;
+
+    // choose platform
+    let mut app_data = AppData::read().await?;
+
+    if let None = app_data.platform {
+        let select = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Which platform do you play Bonelab on?")
+            .item("Windows")
+            .item("Quest")
+            .default(0)
+            .interact()?;
+        let platform = BonelabPlatform::try_from(select)?;
+
+        app_data.platform = Some(platform);
+    }
 
     // get subscribed mods
     let subscriptions = modio
@@ -27,11 +45,10 @@ async fn try_main() -> Result<()> {
         .await?;
 
     // remove installed mod if not subscribed
-    let installed_mods = AppData::read().await?.installed_mods;
     let mut removed_mods = 0;
 
-    for (installed_mod_id, installed_mod) in &installed_mods {
-        if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(installed_mod_id)) {
+    for (installed_mod_id, installed_mod) in app_data.installed_mods.clone() {
+        if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&installed_mod_id)) {
             remove_dir_all(
                 AppData::dir_path()?
                     .join("Mods")
@@ -39,9 +56,13 @@ async fn try_main() -> Result<()> {
             )
             .await?;
 
+            app_data.installed_mods.remove(&installed_mod_id);
+
             removed_mods += 1;
         }
     }
+
+    app_data.write().await?;
 
     match removed_mods {
         0 => (),
@@ -60,7 +81,7 @@ async fn try_main() -> Result<()> {
             subscription,
             multi_progress.add(ProgressBar::new_spinner()),
             modio.clone(),
-            installed_mods.clone(),
+            app_data.installed_mods.clone(),
         ));
     }
 
