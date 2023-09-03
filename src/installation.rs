@@ -118,21 +118,21 @@ async fn _install_mod(
 
     archive.extract(AppData::read().await?.mods_dir_path()?)?;
 
-    let folder = Path::new(
+    let archive_ancestors: Vec<&Path> = Path::new(
         archive
             .file_names()
-            .take(1)
-            .collect::<Vec<&str>>()
-            .first()
+            .next()
             .ok_or(anyhow!("Mod file archive is empty"))?,
     )
     .ancestors()
-    .last()
-    .ok_or(anyhow!(
-        "File or directory in mod file archive does not have any ancestors"
-    ))?
-    .as_os_str()
-    .to_os_string();
+    .collect();
+    let folder = archive_ancestors
+        .get(archive_ancestors.len() - 2)
+        .ok_or(anyhow!(
+            "File or directory in mod file archive does not have any ancestors"
+        ))?
+        .as_os_str()
+        .to_os_string();
     let mut app_data = AppData::read().await?;
 
     // TODO: push to headset
