@@ -27,11 +27,11 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build for ${{ runner.os }}
+    - name: Build for Linux
       run: cargo build --release --verbose
     - name: Tar executable
       run: tar -cvf bonelab_mod_manager.tar -C target/release bonelab_mod_manager
-    - name: Upload ${{ runner.os }} build artifact
+    - name: Upload Linux build artifact
       uses: actions/upload-artifact@v3
       with:
         name: bonelab_mod_manager-${{ runner.os }}
@@ -53,9 +53,9 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build for ${{ runner.os }}
+    - name: Build for Windows
       run: cargo build --release --verbose
-    - name: Upload ${{ runner.os }} build artifact
+    - name: Upload Windows build artifact
       uses: actions/upload-artifact@v3
       with:
         name: bonelab_mod_manager-${{ runner.os }}
