@@ -11,7 +11,7 @@ use console::{style, Key, Term};
 #[cfg(target_os = "windows")]
 use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar};
-use installation::install_mod;
+use installation::{install_mod, ModInstallationStatus};
 use modio::{filter::In, mods};
 use tokio::{fs::remove_dir_all, task::JoinSet};
 
@@ -62,14 +62,6 @@ async fn try_main() -> Result<()> {
 
     app_data.write().await?;
 
-    match removed_mods {
-        0 => (),
-        1 => println!("1 installed mod was removed because it is no longer subscribed to"),
-        removed_mods => println!(
-            "{removed_mods} installed mods were removed because they are no longer subscribed to"
-        ),
-    }
-
     // spawn a task for each mod
     let mut set = JoinSet::new();
     let multi_progress = MultiProgress::new();
@@ -83,21 +75,28 @@ async fn try_main() -> Result<()> {
         ));
     }
 
-    let mut successful = 0;
-    let mut unsuccessful = 0;
+    let mut installed = 0;
+    let mut updated = 0;
+    let mut already_installed = 0;
+    let mut failed = 0;
 
     while let Some(res) = set.join_next().await {
         match res?? {
-            true => successful += 1,
-            false => unsuccessful += 1,
+            ModInstallationStatus::Installed => installed += 1,
+            ModInstallationStatus::Updated => updated += 1,
+            ModInstallationStatus::AlreadyInstalled => already_installed += 1,
+            ModInstallationStatus::Failed => failed += 1,
         }
     }
 
-    println!(
-        "{} successful and {} unsuccessful",
-        style(successful).green(),
-        style(unsuccessful).red()
-    );
+    multi_progress.println(format!(
+        "{} installed, {} updated, {} already installed, {} removed, and {} failed",
+        style(installed).green(),
+        style(updated).cyan(),
+        style(already_installed).bold(),
+        style(removed_mods).yellow(),
+        style(failed).red(),
+    ))?;
 
     Ok(())
 }

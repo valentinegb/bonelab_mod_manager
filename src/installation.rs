@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, io::Cursor, path::Path, time::Duration};
+use std::{collections::HashMap, io::Cursor, path::Path, time::Duration};
 
 use anyhow::{anyhow, Result};
 use console::style;
@@ -11,21 +11,33 @@ use zip::ZipArchive;
 use crate::app_data::BonelabPlatform;
 use crate::app_data::{AppData, InstalledMod};
 
+pub(crate) enum ModInstallationStatus {
+    Installed,
+    Updated,
+    AlreadyInstalled,
+    Failed,
+}
+
 pub(crate) async fn install_mod(
     r#mod: Mod,
     progress_bar: ProgressBar,
     modio: Modio,
     installed_mods: HashMap<u32, InstalledMod>,
-) -> Result<bool> {
+) -> Result<ModInstallationStatus> {
     match _install_mod(r#mod, progress_bar.clone(), modio, installed_mods).await {
-        Ok(msg) => {
+        Ok(status) => {
             progress_bar.set_style(ProgressStyle::with_template(&format!(
                 "{} {{prefix}} - {{msg}} ({{elapsed}})",
                 style("✔").green()
             ))?);
-            progress_bar.finish_with_message(msg);
+            progress_bar.finish_with_message(match status {
+                ModInstallationStatus::Installed => "Installed",
+                ModInstallationStatus::Updated => "Updated",
+                ModInstallationStatus::AlreadyInstalled => "Already installed",
+                ModInstallationStatus::Failed => unreachable!(),
+            });
 
-            Ok(true)
+            Ok(status)
         }
         Err(err) => {
             progress_bar.set_style(ProgressStyle::with_template(&format!(
@@ -34,7 +46,7 @@ pub(crate) async fn install_mod(
             ))?);
             progress_bar.finish_with_message(format!("{}: {err:#}", style("Error").red()));
 
-            Ok(false)
+            Ok(ModInstallationStatus::Failed)
         }
     }
 }
@@ -44,7 +56,7 @@ async fn _install_mod(
     progress_bar: ProgressBar,
     modio: Modio,
     installed_mods: HashMap<u32, InstalledMod>,
-) -> Result<impl Into<Cow<'static, str>>> {
+) -> Result<ModInstallationStatus> {
     progress_bar.enable_steady_tick(Duration::from_millis(120));
     progress_bar.set_style(ProgressStyle::with_template(
         "{spinner:.cyan} {prefix} - {msg}",
@@ -52,10 +64,16 @@ async fn _install_mod(
     progress_bar.set_prefix(format!("{} by {}", r#mod.name, r#mod.submitted_by.username));
     progress_bar.set_message("Checking");
 
+    let updating: bool;
+
     if let Some(installed_mod) = installed_mods.get(&r#mod.id) {
         if installed_mod.date_updated >= r#mod.date_updated {
-            return Ok("Already installed");
+            return Ok(ModInstallationStatus::AlreadyInstalled);
+        } else {
+            updating = true;
         }
+    } else {
+        updating = false;
     }
 
     #[cfg(target_os = "windows")]
@@ -146,5 +164,9 @@ async fn _install_mod(
     );
     app_data.write().await?;
 
-    Ok("Installed")
+    Ok(if updating {
+        ModInstallationStatus::Updated
+    } else {
+        ModInstallationStatus::Installed
+    })
 }
