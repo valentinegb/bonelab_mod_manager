@@ -29,11 +29,13 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build for ${{ runner.os }}
       run: cargo build --release --verbose
+    - name: Tar executable
+      run: tar -cvf bonelab_mod_manager.tar target/release/bonelab_mod_manager
     - name: Upload ${{ runner.os }} build artifact
       uses: actions/upload-artifact@v3
       with:
         name: bonelab_mod_manager-${{ runner.os }}
-        path: target/release/bonelab_mod_manager
+        path: bonelab_mod_manager.tar
     - name: Run tests
       run: cargo test --release --verbose
   build-windows:
