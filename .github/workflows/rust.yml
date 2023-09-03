@@ -27,36 +27,12 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build for Linux
+    - name: Build for ${{ runner.os }}
       run: cargo build --release --verbose
-    - name: Upload Linux build artifact
+    - name: Upload ${{ runner.os }} build artifact
       uses: actions/upload-artifact@v3
       with:
-        name: bonelab_mod_manager-${{ runner.arch }}-${{ runner.os }}
-        path: target/release/bonelab_mod_manager
-    - name: Run tests
-      run: cargo test --release --verbose
-  build-mac:
-
-    runs-on: macos-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build for Mac
-      run: cargo build --release --verbose
-    - name: Upload Mac build artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: bonelab_mod_manager-${{ runner.arch }}-${{ runner.os }}
+        name: bonelab_mod_manager-${{ runner.os }}
         path: target/release/bonelab_mod_manager
     - name: Run tests
       run: cargo test --release --verbose
@@ -75,12 +51,12 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build for Windows
+    - name: Build for ${{ runner.os }}
       run: cargo build --release --verbose
-    - name: Upload Windows build artifact
+    - name: Upload ${{ runner.os }} build artifact
       uses: actions/upload-artifact@v3
       with:
-        name: bonelab_mod_manager-${{ runner.arch }}-${{ runner.os }}
+        name: bonelab_mod_manager-${{ runner.os }}
         path: target/release/bonelab_mod_manager.exe
     - name: Run tests
       run: cargo test --release --verbose
