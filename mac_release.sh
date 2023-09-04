@@ -9,6 +9,9 @@ mkdir target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg
 # Put build into folder
 cp target/aarch64-apple-darwin/release/bonelab_mod_manager target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg/bonelab_mod_manager
 
+# Remove DMG, in case it already exists
+rm -f target/aarch64-apple-darwin/release/bonelab_mod_manager.dmg
+
 # Make DMG from folder
 hdiutil create -srcfolder target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg target/aarch64-apple-darwin/release/bonelab_mod_manager.dmg
 
