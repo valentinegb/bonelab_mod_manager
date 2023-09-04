@@ -89,14 +89,14 @@ async fn try_main() -> Result<()> {
         }
     }
 
-    multi_progress.println(format!(
+    println!(
         "{} installed, {} updated, {} already installed, {} removed, and {} failed",
         style(installed).green(),
         style(updated).cyan(),
         style(already_installed).bold(),
         style(removed_mods).yellow(),
         style(failed).red(),
-    ))?;
+    );
 
     Ok(())
 }
