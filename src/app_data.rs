@@ -71,7 +71,6 @@ impl AppData {
     const REL_DIR_PATH: &str = "var/lib/bonelab_mod_manager";
     #[cfg(target_os = "windows")]
     const REL_DIR_PATH: &str = "bonelab_mod_manager";
-    // TODO: add relative directory paths for Linux
 
     #[cfg(target_family = "unix")]
     fn dir_path() -> Result<PathBuf, VarError> {
