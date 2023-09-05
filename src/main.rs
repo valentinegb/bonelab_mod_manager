@@ -66,6 +66,8 @@ async fn try_main() -> Result<()> {
     let mut set = JoinSet::new();
     let multi_progress = MultiProgress::new();
 
+    multi_progress.set_move_cursor(true);
+
     for subscription in subscriptions {
         set.spawn(install_mod(
             subscription,
