@@ -11,7 +11,7 @@ use console::{style, Key, Term};
 #[cfg(target_os = "windows")]
 use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar};
-use installation::{install_mod, ModInstallationStatus};
+use installation::{install_mod, ModInstallationState};
 use modio::{filter::In, mods};
 use tokio::{fs::remove_dir_all, task::JoinSet};
 
@@ -84,10 +84,11 @@ async fn try_main() -> Result<()> {
 
     while let Some(res) = set.join_next().await {
         match res?? {
-            ModInstallationStatus::Installed => installed += 1,
-            ModInstallationStatus::Updated => updated += 1,
-            ModInstallationStatus::AlreadyInstalled => already_installed += 1,
-            ModInstallationStatus::Failed => failed += 1,
+            ModInstallationState::Installed => installed += 1,
+            ModInstallationState::Updated => updated += 1,
+            ModInstallationState::AlreadyInstalled => already_installed += 1,
+            ModInstallationState::Failed => failed += 1,
+            _ => unreachable!(),
         }
     }
 

@@ -1,9 +1,9 @@
-use std::{collections::HashMap, io::Cursor, path::Path, time::Duration};
+use std::{collections::HashMap, env, fmt, io::Cursor, path::Path};
 
 use anyhow::{anyhow, Result};
-use console::style;
+use console::Style;
 use futures_util::TryStreamExt;
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{style::TemplateError, ProgressBar, ProgressStyle};
 use modio::{mods::Mod, DownloadAction, Modio, TargetPlatform};
 use zip::ZipArchive;
 
@@ -11,11 +11,132 @@ use zip::ZipArchive;
 use crate::app_data::BonelabPlatform;
 use crate::app_data::{AppData, InstalledMod};
 
-pub(crate) enum ModInstallationStatus {
+#[derive(Clone, Copy)]
+pub(crate) enum ModInstallationState {
+    Checking,
+    Downloading,
+    Installing,
+    Updating,
     Installed,
     Updated,
     AlreadyInstalled,
     Failed,
+}
+
+impl fmt::Display for ModInstallationState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Checking => "Checking",
+                Self::Downloading => "Downloading",
+                Self::Installing => "Installing",
+                Self::Updating => "Updating",
+                Self::Installed => "Installed",
+                Self::Updated => "Updated",
+                Self::AlreadyInstalled => "Already Installed",
+                Self::Failed => "Failed",
+            }
+        )
+    }
+}
+
+struct ModInstallation {
+    progress_bar: ProgressBar,
+    state: ModInstallationState,
+    bytes: u64,
+    total_bytes: u64,
+    name: String,
+}
+
+impl ModInstallation {
+    pub(crate) fn new(name: String, progress_bar: ProgressBar) -> Result<Self, TemplateError> {
+        let mut new_self = Self {
+            progress_bar: progress_bar
+                .with_message(name.clone())
+                .with_style(Self::indeterminate_style()?),
+            state: ModInstallationState::Checking,
+            bytes: 0,
+            total_bytes: 0,
+            name,
+        };
+
+        new_self.update_state(new_self.state)?;
+
+        Ok(new_self)
+    }
+
+    fn update_state(&mut self, state: ModInstallationState) -> Result<(), TemplateError> {
+        let doing_style = Style::new().bold().cyan();
+        let done_style = Style::new().bold().green();
+        let didnt_style = Style::new().bold().red();
+        let state_string = state.to_string();
+
+        self.state = state;
+
+        self.progress_bar.set_prefix(match state {
+            ModInstallationState::Checking
+            | ModInstallationState::Downloading
+            | ModInstallationState::Installing
+            | ModInstallationState::Updating => doing_style.apply_to(state_string).to_string(),
+            ModInstallationState::Installed
+            | ModInstallationState::Updated
+            | ModInstallationState::AlreadyInstalled => {
+                done_style.apply_to(state_string).to_string()
+            }
+            ModInstallationState::Failed => didnt_style.apply_to(state_string).to_string(),
+        });
+
+        self.progress_bar.set_style(match state {
+            ModInstallationState::Downloading => Self::bar_style()?,
+            ModInstallationState::Failed => Self::error_style()?,
+            _ => Self::indeterminate_style()?,
+        });
+
+        match state {
+            ModInstallationState::Installed
+            | ModInstallationState::Updated
+            | ModInstallationState::AlreadyInstalled
+            | ModInstallationState::Failed => self.progress_bar.finish(),
+            _ => (),
+        }
+
+        Ok(())
+    }
+
+    fn update_bytes(&mut self, bytes: u64) {
+        self.bytes = bytes;
+        self.progress_bar.set_position(bytes);
+    }
+
+    fn update_total_bytes(&mut self, total_bytes: u64) {
+        self.total_bytes = total_bytes;
+        self.progress_bar.set_length(total_bytes);
+    }
+
+    fn fail(&mut self, msg: impl fmt::Display) -> Result<(), TemplateError> {
+        self.progress_bar
+            .set_message(format!("{}: {msg}", self.name));
+        self.update_state(ModInstallationState::Failed)?;
+
+        Ok(())
+    }
+
+    fn indeterminate_style() -> Result<ProgressStyle, TemplateError> {
+        ProgressStyle::with_template("{prefix:>17} {wide_msg}")
+    }
+
+    fn error_style() -> Result<ProgressStyle, TemplateError> {
+        ProgressStyle::with_template("{prefix:>17} {msg}")
+    }
+
+    fn bar_style() -> Result<ProgressStyle, TemplateError> {
+        Ok(ProgressStyle::with_template(
+            "{prefix:>17} [{bar:17}] {bytes:>10} / {total_bytes:>10}: {wide_msg}",
+        )?
+        .progress_chars("=> "))
+    }
 }
 
 pub(crate) async fn install_mod(
@@ -23,52 +144,42 @@ pub(crate) async fn install_mod(
     progress_bar: ProgressBar,
     modio: Modio,
     installed_mods: HashMap<u32, InstalledMod>,
-) -> Result<ModInstallationStatus> {
-    match _install_mod(r#mod, progress_bar.clone(), modio, installed_mods).await {
-        Ok(status) => {
-            progress_bar.set_style(ProgressStyle::with_template(&format!(
-                "{} {{prefix}} - {{msg}} ({{elapsed}})",
-                style("✔").green()
-            ))?);
-            progress_bar.finish_with_message(match status {
-                ModInstallationStatus::Installed => "Installed",
-                ModInstallationStatus::Updated => "Updated",
-                ModInstallationStatus::AlreadyInstalled => "Already installed",
-                ModInstallationStatus::Failed => unreachable!(),
-            });
+) -> Result<ModInstallationState> {
+    let mut mod_installation = ModInstallation::new(r#mod.name.clone(), progress_bar)?;
 
-            Ok(status)
+    match _install_mod(r#mod, &mut mod_installation, modio, installed_mods).await {
+        Ok(state) => {
+            mod_installation.update_state(state)?;
+
+            Ok(state)
         }
         Err(err) => {
-            progress_bar.set_style(ProgressStyle::with_template(&format!(
-                "{} {{prefix}} - {{msg}}",
-                style("✘").red()
-            ))?);
-            progress_bar.finish_with_message(format!("{}: {err:#}", style("Error").red()));
+            let mut msg = format!("{err:#}");
 
-            Ok(ModInstallationStatus::Failed)
+            if let Ok(backtrace) = env::var("RUST_BACKTRACE") {
+                if backtrace == "1" {
+                    msg += &err.backtrace().to_string();
+                }
+            }
+
+            mod_installation.fail(msg)?;
+
+            Ok(ModInstallationState::Failed)
         }
     }
 }
 
 async fn _install_mod(
     r#mod: Mod,
-    progress_bar: ProgressBar,
+    mod_installation: &mut ModInstallation,
     modio: Modio,
     installed_mods: HashMap<u32, InstalledMod>,
-) -> Result<ModInstallationStatus> {
-    progress_bar.enable_steady_tick(Duration::from_millis(120));
-    progress_bar.set_style(ProgressStyle::with_template(
-        "{spinner:.cyan} {prefix} - {msg}",
-    )?);
-    progress_bar.set_prefix(format!("{} by {}", r#mod.name, r#mod.submitted_by.username));
-    progress_bar.set_message("Checking");
-
+) -> Result<ModInstallationState> {
     let updating: bool;
 
     if let Some(installed_mod) = installed_mods.get(&r#mod.id) {
         if installed_mod.date_updated >= r#mod.date_updated {
-            return Ok(ModInstallationStatus::AlreadyInstalled);
+            return Ok(ModInstallationState::AlreadyInstalled);
         } else {
             updating = true;
         }
@@ -111,26 +222,24 @@ async fn _install_mod(
         })
         .await?;
 
-    progress_bar.set_style(ProgressStyle::with_template(
-        "{spinner:.cyan} {prefix} - {msg} {wide_bar} {bytes}/{total_bytes} ({eta})",
-    )?);
-    progress_bar.set_length(downloader.content_length().ok_or(anyhow!(
+    mod_installation.update_state(ModInstallationState::Downloading)?;
+    mod_installation.update_total_bytes(downloader.content_length().ok_or(anyhow!(
         "Mod file HTTP response did not provide content length"
     ))?);
-    progress_bar.set_message("Downloading");
 
     let mut stream = Box::pin(downloader.stream());
     let mut bytes = Vec::new();
 
     while let Some(chunk) = stream.try_next().await? {
         bytes.append(&mut chunk.to_vec());
-        progress_bar.inc(chunk.len() as u64);
+        mod_installation.update_bytes(chunk.len() as u64);
     }
 
-    progress_bar.set_style(ProgressStyle::with_template(
-        "{spinner:.cyan} {prefix} - {msg}",
-    )?);
-    progress_bar.set_message("Extracting");
+    mod_installation.update_state(if updating {
+        ModInstallationState::Updating
+    } else {
+        ModInstallationState::Installing
+    })?;
 
     let mut archive = ZipArchive::new(Cursor::new(bytes))?;
 
@@ -165,8 +274,8 @@ async fn _install_mod(
     app_data.write().await?;
 
     Ok(if updating {
-        ModInstallationStatus::Updated
+        ModInstallationState::Updated
     } else {
-        ModInstallationStatus::Installed
+        ModInstallationState::Installed
     })
 }
