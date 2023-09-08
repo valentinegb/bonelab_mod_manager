@@ -93,12 +93,12 @@ async fn try_main() -> Result<()> {
     }
 
     println!(
-        "{} installed, {} updated, {} already installed, {} removed, and {} failed",
-        style(installed).green(),
-        style(updated).cyan(),
+        "\n\n{} installed, {} updated, {} already installed, {} removed, and {} failed\n",
+        style(installed).bold().green(),
+        style(updated).bold().cyan(),
         style(already_installed).bold(),
-        style(removed_mods).yellow(),
-        style(failed).red(),
+        style(removed_mods).bold().yellow(),
+        style(failed).bold().red(),
     );
 
     Ok(())
@@ -122,7 +122,9 @@ async fn main() {
     match try_main().await {
         Ok(_) => println!(
             "{}",
-            style("Completed without any unrecoverable errors!").green()
+            style("Completed without any unrecoverable errors!")
+                .bold()
+                .green()
         ),
         Err(err) => {
             if let Some(err) = err.downcast_ref::<modio::Error>() {
@@ -140,7 +142,11 @@ async fn main() {
 
             if let Ok(backtrace) = env::var("RUST_BACKTRACE") {
                 if backtrace == "1" {
-                    eprintln!("{}: {err:#}\n{}", style("Error").red(), err.backtrace());
+                    eprintln!(
+                        "{}: {err:#}\n{}",
+                        style("Failed").bold().red(),
+                        err.backtrace()
+                    );
                     return wait_to_quit();
                 }
             }

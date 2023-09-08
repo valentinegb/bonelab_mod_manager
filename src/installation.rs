@@ -35,7 +35,7 @@ impl fmt::Display for ModInstallationState {
                 Self::Updating => "Updating",
                 Self::Installed => "Installed",
                 Self::Updated => "Updated",
-                Self::AlreadyInstalled => "Already Installed",
+                Self::AlreadyInstalled => "Already installed",
                 Self::Failed => "Failed",
             }
         )
