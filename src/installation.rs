@@ -105,9 +105,9 @@ impl ModInstallation {
         Ok(())
     }
 
-    fn update_bytes(&mut self, bytes: u64) {
-        self.bytes = bytes;
-        self.progress_bar.set_position(bytes);
+    fn increment_bytes(&mut self, bytes: u64) {
+        self.bytes += bytes;
+        self.progress_bar.inc(bytes);
     }
 
     fn update_total_bytes(&mut self, total_bytes: u64) {
@@ -133,7 +133,7 @@ impl ModInstallation {
 
     fn bar_style() -> Result<ProgressStyle, TemplateError> {
         Ok(ProgressStyle::with_template(
-            "{prefix:>17} [{bar:17}] {bytes:>10} / {total_bytes:>10}: {wide_msg}",
+            "{prefix:>17} [{bar:17}] {bytes:>11} / {total_bytes:>11}: {wide_msg}",
         )?
         .progress_chars("=> "))
     }
@@ -232,7 +232,7 @@ async fn _install_mod(
 
     while let Some(chunk) = stream.try_next().await? {
         bytes.append(&mut chunk.to_vec());
-        mod_installation.update_bytes(chunk.len() as u64);
+        mod_installation.increment_bytes(chunk.len() as u64);
     }
 
     mod_installation.update_state(if updating {
