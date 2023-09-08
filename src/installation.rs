@@ -158,7 +158,7 @@ pub(crate) async fn install_mod(
 
             if let Ok(backtrace) = env::var("RUST_BACKTRACE") {
                 if backtrace == "1" {
-                    msg += &err.backtrace().to_string();
+                    msg += &format!("\n{}", err.backtrace());
                 }
             }
 
