@@ -75,6 +75,12 @@ impl ModInstallation {
 
         self.state = state;
 
+        self.progress_bar.set_style(match state {
+            ModInstallationState::Downloading => Self::bar_style()?,
+            ModInstallationState::Failed => Self::error_style()?,
+            _ => Self::indeterminate_style()?,
+        });
+
         self.progress_bar.set_prefix(match state {
             ModInstallationState::Checking
             | ModInstallationState::Downloading
@@ -86,12 +92,6 @@ impl ModInstallation {
                 done_style.apply_to(state_string).to_string()
             }
             ModInstallationState::Failed => didnt_style.apply_to(state_string).to_string(),
-        });
-
-        self.progress_bar.set_style(match state {
-            ModInstallationState::Downloading => Self::bar_style()?,
-            ModInstallationState::Failed => Self::error_style()?,
-            _ => Self::indeterminate_style()?,
         });
 
         match state {
