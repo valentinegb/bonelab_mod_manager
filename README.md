@@ -2,14 +2,7 @@
 
 Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
-<p align="center">
-  <img width="858" alt="Screenshot 2023-09-08 at 4 38 43 PM" src="https://github.com/valentinegb/bonelab_mod_manager/assets/35977727/b2c810b3-586b-4103-ad96-f1bc449abf30">
-</p>
-
-<h6 align="center">
-  The ETA is a bit underconfident since it doesn't account for download speeds improving as other mods finish downloading.
-  Also, my computer's download speed is normally around 1 MB/s lol
-</h6>
+<img width="858" alt="Screenshot 2023-09-08 at 4 38 43 PM" src="https://github.com/valentinegb/bonelab_mod_manager/assets/35977727/b2c810b3-586b-4103-ad96-f1bc449abf30">
 
 ## Features
 
@@ -50,3 +43,7 @@ Windows: `%AppData%/bonelab_mod_manager/Mods`
 
 I know, it isn't ideal having to move the mods from this folder to your headset,
 but it's on the roadmap for the mod manager to do that for you, it will in the future!
+
+## Configuring Concurrent Downloads
+
+By default, Bonelab Mod Manager will install 4 mods at a time. This is configurable however since hardware can differ drastically. To change the maximum number of concurrent downloads, set the `BMM_CONCURRENT_DOWNLOADS` environment variable.
