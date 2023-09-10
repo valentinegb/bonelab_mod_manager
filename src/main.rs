@@ -41,7 +41,7 @@ async fn try_main() -> Result<()> {
     }
 
     // get subscribed mods
-    let subscriptions = modio
+    let mut subscriptions = modio
         .user()
         .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
         .collect()
@@ -65,16 +65,24 @@ async fn try_main() -> Result<()> {
     // spawn a task for each mod
     let mut set = JoinSet::new();
     let multi_progress = MultiProgress::new();
+    let concurrent_downloads: u8 =
+        if let Ok(concurrent_downloads) = env::var("BMM_CONCURRENT_DOWNLOADS") {
+            concurrent_downloads.parse()?
+        } else {
+            4
+        };
 
-    multi_progress.set_move_cursor(true);
-
-    for subscription in subscriptions {
-        set.spawn(install_mod(
-            subscription,
-            multi_progress.add(ProgressBar::new_spinner()),
-            modio.clone(),
-            app_data.installed_mods.clone(),
-        ));
+    for _ in 0..concurrent_downloads {
+        if let Some(subscription) = subscriptions.pop() {
+            set.spawn(install_mod(
+                subscription,
+                multi_progress.add(ProgressBar::new_spinner()),
+                modio.clone(),
+                app_data.installed_mods.clone(),
+            ));
+        } else {
+            break;
+        }
     }
 
     let mut installed = 0;
@@ -89,6 +97,15 @@ async fn try_main() -> Result<()> {
             ModInstallationState::AlreadyInstalled => already_installed += 1,
             ModInstallationState::Failed => failed += 1,
             _ => unreachable!(),
+        }
+
+        if let Some(subscription) = subscriptions.pop() {
+            set.spawn(install_mod(
+                subscription,
+                multi_progress.add(ProgressBar::new_spinner()),
+                modio.clone(),
+                app_data.installed_mods.clone(),
+            ));
         }
     }
 
