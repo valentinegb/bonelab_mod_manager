@@ -282,7 +282,7 @@ dependencies = [
 
 [[package]]
 name = "bonelab_mod_manager"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "console",
