@@ -6,24 +6,49 @@ cargo build --release --target aarch64-apple-darwin
 # Build for an Intel Mac
 cargo build --release --target x86_64-apple-darwin
 
-# Create folder to put universal executable into
-mkdir -p target/universal-apple-darwin/release/bonelab_mod_manager_dmg
+# Create macOS application bundle
+mkdir -p \
+    "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources" \
+    "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS"
 
 # Merge two executables into universal exectuable
 lipo \
     target/aarch64-apple-darwin/release/bonelab_mod_manager \
     target/x86_64-apple-darwin/release/bonelab_mod_manager \
     -create \
-    -output target/universal-apple-darwin/release/bonelab_mod_manager_dmg/bonelab_mod_manager
+    -output "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
 
-# Remove DMG, in case it already exists
-rm -f target/universal-apple-darwin/release/bonelab_mod_manager.dmg
+# Create script to open terminal when app is run
+cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
+#!/bin/bash
+/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal "\$(dirname "\$0")/../Resources/bonelab_mod_manager"
+EOF
 
-# Make DMG from folder
-hdiutil \
-    create \
-    -srcfolder target/universal-apple-darwin/release/bonelab_mod_manager_dmg \
-    target/universal-apple-darwin/release/bonelab_mod_manager.dmg
+# Make script executable
+chmod +x "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
 
-# Remove folder
-rm -rf target/universal-apple-darwin/release/bonelab_mod_manager_dmg
+# Create Info.plist
+cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Info.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Bonelab Mod Manager</string>
+	<key>CFBundleDisplayName</key>
+	<string>Bonelab Mod Manager</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.valentinegb.bonelab_mod_manager</string>
+	<key>CFBundleVersion</key>
+	<string>0.5.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>bbmm</string>
+	<key>CFBundleExecutable</key>
+	<string>Bonelab Mod Manager</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+</dict>
+</plist>
+EOF
