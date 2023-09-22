@@ -1131,8 +1131,8 @@ dependencies = [
 
 [[package]]
 name = "modio"
-version = "0.8.1"
-source = "git+https://github.com/valentinegb/modio-rs.git?branch=downloader-content-length#bf51830cc55c7ee80401a5f1ab839171f4c6e542"
+version = "0.8.2"
+source = "git+https://github.com/valentinegb/modio-rs.git?branch=downloader-content-length#83eb25fd7d3e0bcaa36424a743ccecb679741b94"
 dependencies = [
  "bitflags 2.4.0",
  "bytes 1.5.0",
