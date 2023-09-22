@@ -3,17 +3,27 @@
 # Build for an Apple Silicon Mac
 cargo build --release --target aarch64-apple-darwin
 
-# Create folder to put build into
-mkdir target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg
+# Build for an Intel Mac
+cargo build --release --target x86_64-apple-darwin
 
-# Put build into folder
-cp target/aarch64-apple-darwin/release/bonelab_mod_manager target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg/bonelab_mod_manager
+# Create folder to put universal executable into
+mkdir -p target/universal-apple-darwin/release/bonelab_mod_manager_dmg
+
+# Merge two executables into universal exectuable
+lipo \
+    target/aarch64-apple-darwin/release/bonelab_mod_manager \
+    target/x86_64-apple-darwin/release/bonelab_mod_manager \
+    -create \
+    -output target/universal-apple-darwin/release/bonelab_mod_manager_dmg/bonelab_mod_manager
 
 # Remove DMG, in case it already exists
-rm -f target/aarch64-apple-darwin/release/bonelab_mod_manager.dmg
+rm -f target/universal-apple-darwin/release/bonelab_mod_manager.dmg
 
 # Make DMG from folder
-hdiutil create -srcfolder target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg target/aarch64-apple-darwin/release/bonelab_mod_manager.dmg
+hdiutil \
+    create \
+    -srcfolder target/universal-apple-darwin/release/bonelab_mod_manager_dmg \
+    target/universal-apple-darwin/release/bonelab_mod_manager.dmg
 
 # Remove folder
-rm -rf target/aarch64-apple-darwin/release/bonelab_mod_manager_dmg
+rm -rf target/universal-apple-darwin/release/bonelab_mod_manager_dmg
