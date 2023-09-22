@@ -7,9 +7,9 @@ Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 ## Features
 
 - Multi-platform
-  - macOS
-  - Linux
-  - Windows
+  - macOS (Apple Silicon and Intel)
+  - Linux (x64)
+  - Windows (x64)
 - PC and Quest mod support
 - Parallel downloads
 - Installs subscribed mod.io mods
