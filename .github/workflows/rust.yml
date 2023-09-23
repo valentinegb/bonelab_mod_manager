@@ -12,10 +12,30 @@ env:
   MODIO_API_KEY: ${{ secrets.MODIO_API_KEY }}
 
 jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Build for Windows
+      run: cargo build --release --verbose
+    - name: Upload Windows build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: bonelab_mod_manager-${{ runner.os }}
+        path: target/release/bonelab_mod_manager.exe
+    - name: Run tests
+      run: cargo test --release --verbose
   build-macos:
-
     runs-on: macos-latest
-
     steps:
     - uses: actions/checkout@v3
     - uses: actions/cache@v3
@@ -36,9 +56,7 @@ jobs:
     - name: Run tests
       run: cargo test --release --verbose
   build-linux:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - uses: actions/cache@v3
@@ -59,29 +77,5 @@ jobs:
       with:
         name: bonelab_mod_manager-${{ runner.os }}
         path: bonelab_mod_manager.tar.gz
-    - name: Run tests
-      run: cargo test --release --verbose
-  build-windows:
-
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Build for Windows
-      run: cargo build --release --verbose
-    - name: Upload Windows build artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: bonelab_mod_manager-${{ runner.os }}
-        path: target/release/bonelab_mod_manager.exe
     - name: Run tests
       run: cargo test --release --verbose
