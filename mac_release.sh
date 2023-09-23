@@ -11,30 +11,30 @@ rm -rf "target/universal-apple-darwin/release"
 
 # Create macOS application bundle
 mkdir -p \
-    "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources" \
-    "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS"
+    "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Resources" \
+    "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/MacOS"
 
 # Merge two executables into universal exectuable
 lipo \
     target/aarch64-apple-darwin/release/bonelab_mod_manager \
     target/x86_64-apple-darwin/release/bonelab_mod_manager \
     -create \
-    -output "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
+    -output "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
 
 # Create script to open terminal when app is run
-cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
+cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
 #!/bin/bash
 /System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal "\$(dirname "\$0")/../Resources/bonelab_mod_manager"
 EOF
 
 # Make script executable
-chmod +x "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
+chmod +x "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
 
 # Copy app icon into bundle
-cp AppIcon.png "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources/AppIcon.png"
+cp AppIcon.png "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Resources/AppIcon.png"
 
 # Create Info.plist
-cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Info.plist"
+cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -63,8 +63,11 @@ cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Conte
 </plist>
 EOF
 
+# Make Applications alias
+ln -s /Applications "target/universal-apple-darwin/release/Bonelab Mod Manager"
+
 # Make DMG from folder
 hdiutil \
     create \
-    -srcfolder "target/universal-apple-darwin/release/Bonelab Mod Manager.app" \
+    -srcfolder "target/universal-apple-darwin/release/Bonelab Mod Manager" \
     target/universal-apple-darwin/release/bonelab_mod_manager.dmg
