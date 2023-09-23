@@ -29,6 +29,8 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build for macOS (Intel)
       run: cargo build --release --target x86_64-apple-darwin --verbose
+    - name: Install `aarch64-apple-darwin` target
+      run: rustup target add aarch64-apple-darwin
     - name: Build for macOS (Apple Silicon)
       run: cargo build --release --target aarch64-apple-darwin --verbose
     - name: Run tests
