@@ -35,7 +35,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: bonelab_mod_manager-${{ runner.os }}
-        path: bonelab_mod_manager.tar
+        path: bonelab_mod_manager.tar.gz
     - name: Run tests
       run: cargo test --release --verbose
   build-windows:
