@@ -6,8 +6,8 @@ cargo build --release --target aarch64-apple-darwin
 # Build for an Intel Mac
 cargo build --release --target x86_64-apple-darwin
 
-# Remove bundle if it already exists
-rm -rf "target/universal-apple-darwin/release/Bonelab Mod Manager.app"
+# Remove previous artifacts
+rm -rf "target/universal-apple-darwin/release"
 
 # Create macOS application bundle
 mkdir -p \
@@ -62,3 +62,9 @@ cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Conte
 </dict>
 </plist>
 EOF
+
+# Make DMG from folder
+hdiutil \
+    create \
+    -srcfolder target/universal-apple-darwin/release \
+    target/universal-apple-darwin/release/bonelab_mod_manager.dmg
