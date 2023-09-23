@@ -63,9 +63,11 @@ Go to the [latest release on GitHub](https://github.com/valentinegb/bonelab_mod_
 1. Follow the installation instructions for your OS [above](#how-to-install).
 2. Launch the program, by double clicking or another preferred method.
 3. On your first time running, you will be prompted to sign in to mod.io. Use the arrow keys to select your method of signing in then press enter.
-4. If you are on Windows, you will be prompted whether you would like to install PC mods or Quest mods.
-5. After that, the program will do the rest for you! Sit back, relax, and watch as all your mods are downloaded and installed.
-6. Next time you want to sync your installed mods, just run the program again.
+   - If you select "Send me an email code" you will need to type in the email associated with your mod.io account. You will shortly after receive an email from mod.io containing a code, which you will also need to enter into the program.
+   - Selecting "Let me input my token" is a little more complicated. You will need to go to [mod.io Account Access](https://mod.io/me/access) and generate a token with read permissions. (You do **NOT** need to give write permissions and I advise that you don't.) You can name the client and the token whatever you'd like, it doesn't matter.
+5. If you are on Windows, you will be prompted whether you would like to install PC mods or Quest mods.
+6. After that, the program will do the rest for you! Sit back, relax, and watch as all your mods are downloaded and installed.
+7. Next time you want to sync your installed mods, just run the program again.
 
 ## Quest Mod Installation Path
 
