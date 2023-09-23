@@ -40,13 +40,13 @@ Go to the [latest release on GitHub](https://github.com/valentinegb/bonelab_mod_
 
 Once Homebrew is installed, which can be done from the hyperlink above, to install Bonelab Mod Manager you simply need to enter the following into your terminal:
 
-```shell
+```zsh
 brew install valentinegb/tap/bonelab-mod-manager
 ```
 
 To update later on, enter this command:
 
-```shell
+```zsh
 brew upgrade bonelab-mod-manager
 ```
 
