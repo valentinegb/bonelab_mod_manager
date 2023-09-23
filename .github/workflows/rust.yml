@@ -55,65 +55,18 @@ jobs:
       run: rustup target add aarch64-apple-darwin
     - name: Build for macOS (Apple Silicon)
       run: cargo build --release --target aarch64-apple-darwin --verbose
-    - name: Create macOS application bundle
-      run: |
-        mkdir -p \
-          "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Resources" \
-          "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/MacOS"
     - name: Merge two executables into universal exectuable
       run: |
         lipo \
           target/x86_64-apple-darwin/release/bonelab_mod_manager \
           target/aarch64-apple-darwin/release/bonelab_mod_manager \
           -create \
-          -output "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
-    - name: Create script to open terminal when app is run
-      run: |
-        cat <<EOF > "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
-        #!/bin/bash
-        /System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal "\$(dirname "\$0")/../Resources/bonelab_mod_manager"
-        EOF
-    - name: Make script executable
-      run: chmod +x "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
-    - name: Copy app icon into bundle
-      run: cp AppIcon.png "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Resources/AppIcon.png"
-    - name: Create Info.plist
-      run: |
-        cat <<EOF > "Bonelab Mod Manager/Bonelab Mod Manager.app/Contents/Info.plist"
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-         	<key>CFBundleName</key>
-         	<string>Bonelab Mod Manager</string>
-         	<key>CFBundleDisplayName</key>
-         	<string>Bonelab Mod Manager</string>
-         	<key>CFBundleIdentifier</key>
-         	<string>com.valentinegb.bonelab_mod_manager</string>
-         	<key>CFBundleVersion</key>
-         	<string>0.5.0</string>
-         	<key>CFBundlePackageType</key>
-         	<string>APPL</string>
-         	<key>CFBundleSignature</key>
-         	<string>bbmm</string>
-         	<key>CFBundleExecutable</key>
-         	<string>Bonelab Mod Manager</string>
-         	<key>CFBundleIconFile</key>
-         	<string>AppIcon</string>
-         	<key>CFBundleIconName</key>
-         	<string>AppIcon</string>
-         	<key>LSApplicationCategoryType</key>
-         	<string>public.app-category.utilities</string>
-        </dict>
-        </plist>
-        EOF
-    - name: Make Applications alias
-      run: ln -s /Applications "Bonelab Mod Manager"
+          -output "Bonelab Mod Manager Installer/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
     - name: Make DMG from folder
       run: |
         hdiutil \
           create \
-          -srcfolder "Bonelab Mod Manager" \
+          -srcfolder "Bonelab Mod Manager Installer" \
           bonelab_mod_manager.dmg
     - name: Upload macOS build artifact
       uses: actions/upload-artifact@v3

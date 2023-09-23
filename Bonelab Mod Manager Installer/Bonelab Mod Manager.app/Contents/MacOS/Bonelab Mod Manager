@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal "\$(dirname "\$0")/../Resources/bonelab_mod_manager"
