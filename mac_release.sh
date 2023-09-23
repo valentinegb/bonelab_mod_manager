@@ -66,5 +66,5 @@ EOF
 # Make DMG from folder
 hdiutil \
     create \
-    -srcfolder target/universal-apple-darwin/release \
+    -srcfolder "target/universal-apple-darwin/release/Bonelab Mod Manager.app" \
     target/universal-apple-darwin/release/bonelab_mod_manager.dmg
