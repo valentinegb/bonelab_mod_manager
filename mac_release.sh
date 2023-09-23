@@ -6,6 +6,9 @@ cargo build --release --target aarch64-apple-darwin
 # Build for an Intel Mac
 cargo build --release --target x86_64-apple-darwin
 
+# Remove bundle if it already exists
+rm -rf "target/universal-apple-darwin/release/Bonelab Mod Manager.app"
+
 # Create macOS application bundle
 mkdir -p \
     "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources" \
@@ -27,6 +30,9 @@ EOF
 # Make script executable
 chmod +x "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/MacOS/Bonelab Mod Manager"
 
+# Copy app icon into bundle
+cp AppIcon.png "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Resources/AppIcon.png"
+
 # Create Info.plist
 cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Contents/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -47,6 +53,10 @@ cat <<EOF > "target/universal-apple-darwin/release/Bonelab Mod Manager.app/Conte
 	<string>bbmm</string>
 	<key>CFBundleExecutable</key>
 	<string>Bonelab Mod Manager</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 </dict>
