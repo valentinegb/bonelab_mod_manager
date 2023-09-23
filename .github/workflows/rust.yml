@@ -30,7 +30,7 @@ jobs:
     - name: Build for Linux
       run: cargo build --release --verbose
     - name: Tar executable
-      run: tar -cvf bonelab_mod_manager.tar -C target/release bonelab_mod_manager
+      run: tar -czvf bonelab_mod_manager.tar.gz -C target/release bonelab_mod_manager
     - name: Upload Linux build artifact
       uses: actions/upload-artifact@v3
       with:
