@@ -62,6 +62,8 @@ jobs:
           target/aarch64-apple-darwin/release/bonelab_mod_manager \
           -create \
           -output "Bonelab Mod Manager Installer/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
+    - name: Make Applications alias
+      run: ln -s /Applications "Bonelab Mod Manager Installer"
     - name: Make DMG from folder
       run: |
         hdiutil \
