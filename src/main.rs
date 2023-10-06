@@ -4,7 +4,7 @@ mod installation;
 
 use std::env;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use app_data::AppData;
 use authentication::{authenticate, delete_password};
 use console::{style, Key, Term};
@@ -13,7 +13,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar};
 use installation::{install_mod, ModInstallationState};
 use modio::{filter::In, mods};
-use tokio::{fs::remove_dir_all, task::JoinSet};
+use tokio::{fs::remove_dir_all, io, task::JoinSet};
 
 #[cfg(target_os = "windows")]
 use crate::app_data::BonelabPlatform;
@@ -52,7 +52,14 @@ async fn try_main() -> Result<()> {
 
     for (installed_mod_id, installed_mod) in app_data.installed_mods.clone() {
         if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&installed_mod_id)) {
-            remove_dir_all(app_data.mods_dir_path()?.join(&installed_mod.folder)).await?;
+            if let Some(err) = remove_dir_all(app_data.mods_dir_path()?.join(&installed_mod.folder))
+                .await
+                .err()
+            {
+                if err.kind() != io::ErrorKind::NotFound {
+                    bail!(err);
+                }
+            }
 
             app_data.installed_mods.remove(&installed_mod_id);
 
