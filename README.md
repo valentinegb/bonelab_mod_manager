@@ -60,7 +60,7 @@ Go to the [latest release on GitHub](https://github.com/valentinegb/bonelab_mod_
 
 ## How to Use
 
-### First Launch
+### Initial Setup
 
 There are some steps that you must take once the first time that you launch the program.
 
