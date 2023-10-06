@@ -60,15 +60,33 @@ Go to the [latest release on GitHub](https://github.com/valentinegb/bonelab_mod_
 
 ## How to Use
 
-1. Subscribe to the mods that you want to have installed and kept up-to-date on [mod.io](https://mod.io/g/bonelab).
-2. Follow the installation instructions for your OS [above](#how-to-install).
-3. Launch the program, by double clicking or another preferred method.
-4. On your first time running, you will be prompted to sign in to mod.io. Use the arrow keys to select your method of signing in then press enter.
+### First Launch
+
+There are some steps that you must take once the first time that you launch the program.
+
+1. If you are on macOS or Linux, you will see a popup for keychain or keyring, respectively. Type in your user password.
+   > Bonelab Mod Manager uses keychain/keyring to securely store your mod.io token. This ensures that no program can access your token without explicity asking user permission, this includes Bonelab Mod Manager.
+2. You will be prompted to sign in to mod.io. Use the arrow keys to select your method of signing in then press enter.
    - If you select "Send me an email code" you will need to type in the email associated with your mod.io account. You will shortly after receive an email from mod.io containing a code, which you will also need to enter into the program.
    - Selecting "Let me input my token" is a little more complicated. You will need to go to [mod.io Account Access](https://mod.io/me/access) and generate a token with read permissions. (You do **NOT** need to give write permissions and I advise that you don't.) You can name the client and the token whatever you'd like, it doesn't matter.
-5. If you are on Windows, you will be prompted whether you would like to install PC mods or Quest mods.
-6. After that, the program will do the rest for you! Sit back, relax, and watch as all your mods are downloaded and installed.
-7. Next time you want to sync your installed mods, just run the program again.
+3. If you are on Windows, you will be prompted whether you would like to install PC mods or Quest mods.
+
+After these steps, you can use Bonelab Mod Manager like normal.
+
+### Install a Mod
+
+1. Subscribe to the mod on [mod.io](https://mod.io/g/bonelab).
+2. Launch Bonelab Mod Manager and it will install the mod for you.
+
+### Update a Mod
+
+1. Ensure you are subscribed to the mod on [mod.io](https://mod.io/g/bonelab).
+2. Launch Bonelab Mod Manager and it will update any mods that are out-of-date.
+
+### Remove a Mod
+
+1. Unsubscribe to the mod on [mod.io](https://mod.io/g/bonelab).
+2. Launch Bonelab Mod Manager and it will remove the mod.
 
 ## Quest Mod Installation Path
 
