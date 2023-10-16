@@ -1139,8 +1139,8 @@ dependencies = [
 
 [[package]]
 name = "modio"
-version = "0.8.2"
-source = "git+https://github.com/valentinegb/modio-rs.git?branch=downloader-content-length#83eb25fd7d3e0bcaa36424a743ccecb679741b94"
+version = "0.8.3"
+source = "git+https://github.com/valentinegb/modio-rs.git?branch=downloader-content-length#7bf667ea8b1bc8ac1902e78986f379eb86b9a840"
 dependencies = [
  "bitflags 2.4.0",
  "bytes 1.5.0",
@@ -1152,7 +1152,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "serde_test",
  "tokio",
  "tokio-util",
  "tracing",
@@ -1771,15 +1770,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.38",
-]
-
-[[package]]
-name = "serde_test"
-version = "1.0.176"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a2f49ace1498612d14f7e0b8245519584db8299541dfe31a06374a828d620ab"
-dependencies = [
- "serde",
 ]
 
 [[package]]
