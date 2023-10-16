@@ -20,7 +20,7 @@ futures-util = { version = "0.3.28", features = ["tokio-io"] }
 indicatif = { version = "0.17.6", features = ["tokio"] }
 modio = { git = "https://github.com/valentinegb/modio-rs.git", branch = "downloader-content-length" }
 postcard = { version = "1.0.8", features = ["use-std"] }
-serde = { version = "1.0.188", features = ["derive"] }
+serde = { version = "1.0.189", features = ["derive"] }
 tokio = { version = "1.33.0", features = ["full"] }
 zip = "0.6.6"
 
