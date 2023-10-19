@@ -1,4 +1,4 @@
-# Bonelab Mod Manager [![Rust](https://github.com/valentinegb/bonelab_mod_manager/actions/workflows/rust.yml/badge.svg)](https://github.com/valentinegb/bonelab_mod_manager/actions/workflows/rust.yml)
+# Bonelab Mod Manager [![Rust CI](https://github.com/valentinegb/bonelab_mod_manager/actions/workflows/rust-ci.yml/badge.svg)](https://github.com/valentinegb/bonelab_mod_manager/actions/workflows/rust-ci.yml)
 
 Keeps your installed Bonelab mods synced with your subscribed mod.io mods.
 
