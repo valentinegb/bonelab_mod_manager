@@ -21,13 +21,20 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Build
+      - name: Build release
         run: cargo build --release --verbose
-      - name: Upload artifact
+      - name: Upload release artifact
         uses: actions/upload-artifact@v3
         with:
-          name: bonelab_mod_manager-${{ runner.os }}
+          name: bonelab_mod_manager-${{ runner.os }}-release
           path: target/release/bonelab_mod_manager.exe
+      - name: Build debug
+        run: cargo build --verbose
+      - name: Upload debug artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bonelab_mod_manager-${{ runner.os }}-debug
+          path: target/debug/bonelab_mod_manager.exe
   build-macos:
     runs-on: macos-latest
     steps:
