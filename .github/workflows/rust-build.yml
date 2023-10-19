@@ -1,10 +1,6 @@
-name: Rust
+name: Rust Build
 
 on:
-  push:
-    branches: ["rewrite"]
-  pull_request:
-    branches: ["rewrite"]
   workflow_dispatch:
 
 env:
@@ -25,12 +21,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Run tests
-        run: cargo test --release --verbose
-      - name: Build for Windows
+      - name: Build
         run: cargo build --release --verbose
-      - name: Upload Windows build artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: bonelab_mod_manager-${{ runner.os }}
           path: target/release/bonelab_mod_manager.exe
@@ -47,15 +40,13 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Run tests
-        run: cargo test --release --verbose
-      - name: Build for macOS (Intel)
+      - name: Build x86_64
         run: cargo build --release --target x86_64-apple-darwin --verbose
-      - name: Install Apple Silicon Mac Rust target
+      - name: Add aarch64 target
         run: rustup target add aarch64-apple-darwin
-      - name: Build for macOS (Apple Silicon)
+      - name: Build aarch64
         run: cargo build --release --target aarch64-apple-darwin --verbose
-      - name: Merge two executables into universal exectuable
+      - name: Create universal executable
         run: |
           lipo \
             target/x86_64-apple-darwin/release/bonelab_mod_manager \
@@ -64,14 +55,13 @@ jobs:
             -output "Bonelab Mod Manager Installer/Bonelab Mod Manager.app/Contents/Resources/bonelab_mod_manager"
       - name: Make Applications alias
         run: ln -s /Applications "Bonelab Mod Manager Installer"
-      - name: Make DMG from folder
+      - name: Create DMG
         run: |
           hdiutil \
             create \
             -srcfolder "Bonelab Mod Manager Installer" \
             bonelab_mod_manager.dmg
-      - name: Upload macOS build artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: bonelab_mod_manager-${{ runner.os }}
           path: bonelab_mod_manager.dmg
@@ -88,14 +78,11 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Run tests
-        run: cargo test --release --verbose
-      - name: Build for Linux
+      - name: Build
         run: cargo build --release --verbose
-      - name: Tar executable
+      - name: Create TAR
         run: tar -czvf bonelab_mod_manager.tar.gz -C target/release bonelab_mod_manager
-      - name: Upload Linux build artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: bonelab_mod_manager-${{ runner.os }}
           path: bonelab_mod_manager.tar.gz
