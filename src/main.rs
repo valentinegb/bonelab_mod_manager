@@ -168,7 +168,7 @@ async fn main() {
                 if backtrace == "1" {
                     eprintln!(
                         "{}: {err:#}\n{}",
-                        style("Failed").bold().red(),
+                        style("Error").bold().red(),
                         err.backtrace()
                     );
                     return wait_to_quit();
