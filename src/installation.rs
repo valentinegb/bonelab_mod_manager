@@ -119,13 +119,11 @@ impl ModInstallation {
     fn increment_bytes(&mut self, bytes: u64) {
         self.bytes += bytes;
         self.progress_bar.inc(bytes);
-        debug!("incremented mod installation bytes");
     }
 
     fn update_total_bytes(&mut self, total_bytes: u64) {
         self.total_bytes = total_bytes;
         self.progress_bar.set_length(total_bytes);
-        debug!("updated total mod installation bytes");
     }
 
     fn fail(&mut self, msg: impl fmt::Display) -> Result<(), TemplateError> {
