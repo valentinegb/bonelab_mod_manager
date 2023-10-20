@@ -10,6 +10,7 @@ use std::{
 #[cfg(target_os = "windows")]
 use anyhow::anyhow;
 use anyhow::Result;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -74,20 +75,28 @@ impl AppData {
 
     #[cfg(target_family = "unix")]
     fn dir_path() -> Result<PathBuf, VarError> {
+        debug!("getting app data dir path");
+
         Ok(PathBuf::from(env::var("HOME")?).join(Self::REL_DIR_PATH))
     }
 
     #[cfg(target_os = "windows")]
     fn dir_path() -> Result<PathBuf, VarError> {
+        debug!("getting app data dir path");
+
         Ok(PathBuf::from(env::var("AppData")?).join(Self::REL_DIR_PATH))
     }
 
     fn path() -> Result<PathBuf, VarError> {
+        debug!("getting app data path");
+
         Ok(Self::dir_path()?.join("app_data"))
     }
 
     #[cfg(target_os = "windows")]
     pub(crate) fn mods_dir_path(&self) -> Result<PathBuf> {
+        debug!("getting mods dir path");
+
         match self
             .platform
             .as_ref()
@@ -103,6 +112,8 @@ impl AppData {
 
     #[cfg(target_family = "unix")]
     pub(crate) fn mods_dir_path(&self) -> Result<PathBuf> {
+        debug!("getting mods dir path");
+
         Ok(Self::dir_path()?.join("Mods"))
     }
 
@@ -110,6 +121,7 @@ impl AppData {
         let default = Self::default();
 
         default.write().await?;
+        debug!("wrote default app data");
 
         Ok(default)
     }
@@ -123,6 +135,8 @@ impl AppData {
 
         let app_data = postcard::from_bytes(&fs::read(path).await?);
 
+        debug!("deserialized app data");
+
         if app_data
             .as_ref()
             .is_err_and(|err| *err == postcard::Error::DeserializeUnexpectedEnd)
@@ -130,8 +144,12 @@ impl AppData {
                 .as_ref()
                 .is_err_and(|err| *err == postcard::Error::SerdeDeCustom)
         {
+            debug!("app data is borked, resetting");
+
             return Ok(Self::write_default().await?);
         }
+
+        debug!("read app data");
 
         Ok(app_data?)
     }
@@ -140,10 +158,13 @@ impl AppData {
         let path = Self::path()?;
 
         if !fs::try_exists(&path).await? {
+            debug!("app data dir does not exist");
             fs::create_dir_all(Self::dir_path()?).await?;
+            debug!("created app data dir");
         }
 
         fs::write(path, postcard::to_stdvec(self)?).await?;
+        debug!("wrote app data");
 
         Ok(())
     }

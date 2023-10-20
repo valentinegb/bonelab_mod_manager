@@ -7,6 +7,7 @@ use console::style;
 use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
 #[cfg(target_family = "unix")]
 use keyring::Entry;
+use log::debug;
 use modio::{Credentials, Modio};
 
 #[cfg(target_family = "unix")]
@@ -59,12 +60,15 @@ pub(super) async fn delete_password() -> Result<()> {
 
 pub(super) async fn authenticate() -> Result<Modio> {
     if let Ok(modio_token) = get_password().await {
+        debug!("got password");
+
         return Ok(Modio::new(Credentials::with_token(
             env!("MODIO_API_KEY"),
             modio_token,
         ))?);
     }
 
+    debug!("could not get password");
     println!("You are not signed in");
 
     let selection = Select::with_theme(&ColorfulTheme::default())
@@ -76,18 +80,23 @@ pub(super) async fn authenticate() -> Result<Modio> {
 
     match selection {
         0 => {
+            debug!("user selected email code");
+
             let email: String = Input::with_theme(&ColorfulTheme::default())
                 .with_prompt("Please enter your email address")
                 .interact_text()?;
             let modio = Modio::new(Credentials::new(env!("MODIO_API_KEY")))?;
 
+            debug!("created mod.io client");
             modio.auth().request_code(&email).await?;
+            debug!("requested code");
 
             let code: String = Input::with_theme(&ColorfulTheme::default())
                 .with_prompt("Enter the code emailed to you")
                 .interact_text()?;
             let credentials = modio.auth().security_code(&code).await?;
 
+            debug!("got security code");
             set_password(
                 credentials
                     .token
@@ -97,10 +106,12 @@ pub(super) async fn authenticate() -> Result<Modio> {
                     .as_ref(),
             )
             .await?;
+            debug!("set password");
 
             Ok(modio.with_credentials(credentials))
         }
         1 => {
+            debug!("user selected input token");
             println!("{}: there may be a bug with a dependency (dialoguer) preventing you from entering your token. Sorry!", style("Warning").yellow());
 
             let token = Password::with_theme(&ColorfulTheme::default())
@@ -108,6 +119,7 @@ pub(super) async fn authenticate() -> Result<Modio> {
                 .interact()?;
 
             set_password(token.as_ref()).await?;
+            debug!("set password");
 
             Ok(Modio::new(Credentials::with_token(
                 env!("MODIO_API_KEY"),

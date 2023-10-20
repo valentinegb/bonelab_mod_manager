@@ -10,8 +10,11 @@ use authentication::{authenticate, delete_password};
 use console::{style, Key, Term};
 #[cfg(target_os = "windows")]
 use dialoguer::{theme::ColorfulTheme, Select};
+#[cfg(debug_assertions)]
+use env_logger::Env;
 use indicatif::{MultiProgress, ProgressBar};
 use installation::{install_mod, ModInstallationState};
+use log::debug;
 use modio::{filter::In, mods};
 use tokio::{fs::remove_dir_all, io, task::JoinSet};
 
@@ -21,6 +24,8 @@ use crate::app_data::BonelabPlatform;
 const BONELAB_GAME_ID: u32 = 3809;
 
 async fn try_main() -> Result<()> {
+    debug!("entering `try_main()`");
+
     // authenticate with mod.io
     let modio = authenticate().await?;
 
@@ -40,12 +45,16 @@ async fn try_main() -> Result<()> {
         app_data.platform = Some(platform);
     }
 
+    debug!("platform chosen");
+
     // get subscribed mods
     let mut subscriptions = modio
         .user()
         .subscriptions(mods::filters::GameId::_in(BONELAB_GAME_ID))
         .collect()
         .await?;
+
+    debug!("got subscribed mods");
 
     // remove installed mod if not subscribed
     let mut removed_mods = 0;
@@ -68,6 +77,7 @@ async fn try_main() -> Result<()> {
     }
 
     app_data.write().await?;
+    debug!("removed unsubscribed mods");
 
     // spawn a task for each mod
     let mut set = JoinSet::new();
@@ -81,13 +91,16 @@ async fn try_main() -> Result<()> {
 
     for _ in 0..concurrent_downloads {
         if let Some(subscription) = subscriptions.pop() {
+            debug!("spawning task for \"{}\"", subscription.name);
             set.spawn(install_mod(
                 subscription,
                 multi_progress.add(ProgressBar::new_spinner()),
                 modio.clone(),
                 app_data.installed_mods.clone(),
             ));
+            debug!("spawned task");
         } else {
+            debug!("no more subscriptions");
             break;
         }
     }
@@ -106,13 +119,17 @@ async fn try_main() -> Result<()> {
             _ => unreachable!(),
         }
 
+        debug!("task finished, another concurrent download can be made");
+
         if let Some(subscription) = subscriptions.pop() {
+            debug!("spawning task for \"{}\"", subscription.name);
             set.spawn(install_mod(
                 subscription,
                 multi_progress.add(ProgressBar::new_spinner()),
                 modio.clone(),
                 app_data.installed_mods.clone(),
             ));
+            debug!("spawned task");
         }
     }
 
@@ -124,11 +141,14 @@ async fn try_main() -> Result<()> {
         style(removed_mods).bold().yellow(),
         style(failed).bold().red(),
     );
+    debug!("all done!");
 
     Ok(())
 }
 
 fn wait_to_quit() {
+    debug!("waiting to quit");
+
     let term = Term::stdout();
 
     term.write_line(&style("Press q to quit").bold().to_string())
@@ -143,6 +163,13 @@ fn wait_to_quit() {
 
 #[tokio::main]
 async fn main() {
+    #[cfg(debug_assertions)]
+    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    #[cfg(not(debug_assertions))]
+    env_logger::init();
+
+    debug!("`env_logger` initialized");
+
     match try_main().await {
         Ok(_) => println!(
             "{}",
@@ -179,5 +206,7 @@ async fn main() {
         }
     }
 
-    wait_to_quit()
+    wait_to_quit();
+
+    debug!("quitting");
 }

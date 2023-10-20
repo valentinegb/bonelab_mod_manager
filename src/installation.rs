@@ -4,6 +4,7 @@ use anyhow::{anyhow, Result};
 use console::Style;
 use futures_util::TryStreamExt;
 use indicatif::{style::TemplateError, ProgressBar, ProgressStyle};
+use log::debug;
 use modio::{mods::Mod, DownloadAction, Modio, TargetPlatform};
 use zip::ZipArchive;
 
@@ -64,6 +65,8 @@ impl ModInstallation {
 
         new_self.update_state(new_self.state)?;
 
+        debug!("create new `ModInstallation`");
+
         Ok(new_self)
     }
 
@@ -74,12 +77,14 @@ impl ModInstallation {
         let state_string = state.to_string();
 
         self.state = state;
+        debug!("set internal mod installation state");
 
         self.progress_bar.set_style(match state {
             ModInstallationState::Downloading => Self::bar_style()?,
             ModInstallationState::Failed => Self::error_style()?,
             _ => Self::indeterminate_style()?,
         });
+        debug!("set mod installation style");
 
         self.progress_bar.set_prefix(match state {
             ModInstallationState::Checking
@@ -93,14 +98,20 @@ impl ModInstallation {
             }
             ModInstallationState::Failed => didnt_style.apply_to(state_string).to_string(),
         });
+        debug!("set mod installation prefix");
 
         match state {
             ModInstallationState::Installed
             | ModInstallationState::Updated
             | ModInstallationState::AlreadyInstalled
-            | ModInstallationState::Failed => self.progress_bar.finish(),
+            | ModInstallationState::Failed => {
+                self.progress_bar.finish();
+                debug!("finished mod installation");
+            }
             _ => (),
         }
+
+        debug!("updated mod installation state");
 
         Ok(())
     }
@@ -108,17 +119,20 @@ impl ModInstallation {
     fn increment_bytes(&mut self, bytes: u64) {
         self.bytes += bytes;
         self.progress_bar.inc(bytes);
+        debug!("incremented mod installation bytes");
     }
 
     fn update_total_bytes(&mut self, total_bytes: u64) {
         self.total_bytes = total_bytes;
         self.progress_bar.set_length(total_bytes);
+        debug!("updated total mod installation bytes");
     }
 
     fn fail(&mut self, msg: impl fmt::Display) -> Result<(), TemplateError> {
         self.progress_bar
             .set_message(format!("{}: {msg}", self.name));
         self.update_state(ModInstallationState::Failed)?;
+        debug!("failed mod installation");
 
         Ok(())
     }
@@ -150,6 +164,7 @@ pub(crate) async fn install_mod(
     match _install_mod(r#mod, &mut mod_installation, modio, installed_mods).await {
         Ok(state) => {
             mod_installation.update_state(state)?;
+            debug!("mod installation was okay");
 
             Ok(state)
         }
@@ -163,6 +178,7 @@ pub(crate) async fn install_mod(
             }
 
             mod_installation.fail(msg)?;
+            debug!("mod installation was notokay");
 
             Ok(ModInstallationState::Failed)
         }
@@ -178,9 +194,12 @@ async fn _install_mod(
     let updating: bool;
 
     if let Some(installed_mod) = installed_mods.get(&r#mod.id) {
+        debug!("mod is already installed");
+
         if installed_mod.date_updated >= r#mod.date_updated {
             return Ok(ModInstallationState::AlreadyInstalled);
         } else {
+            debug!("mod needs to be updated");
             updating = true;
         }
     } else {
@@ -206,6 +225,8 @@ async fn _install_mod(
     for platform in r#mod.platforms {
         if platform.target.display_name() == target_platform {
             file_id = Some(platform.modfile_id);
+            debug!("got mod file id");
+
             break;
         }
     }
@@ -222,6 +243,7 @@ async fn _install_mod(
         })
         .await?;
 
+    debug!("created mod downloader");
     mod_installation.update_state(ModInstallationState::Downloading)?;
     mod_installation.update_total_bytes(downloader.content_length().ok_or(anyhow!(
         "Mod file HTTP response did not provide content length"
@@ -233,6 +255,7 @@ async fn _install_mod(
     while let Some(chunk) = stream.try_next().await? {
         bytes.append(&mut chunk.to_vec());
         mod_installation.increment_bytes(chunk.len() as u64);
+        debug!("received chunk");
     }
 
     mod_installation.update_state(if updating {
@@ -244,6 +267,7 @@ async fn _install_mod(
     let mut archive = ZipArchive::new(Cursor::new(bytes))?;
 
     archive.extract(AppData::read().await?.mods_dir_path()?)?;
+    debug!("extracted mod file");
 
     let archive_ancestors: Vec<&Path> = Path::new(
         archive
@@ -272,6 +296,7 @@ async fn _install_mod(
         },
     );
     app_data.write().await?;
+    debug!("listed mod in app data as installed");
 
     Ok(if updating {
         ModInstallationState::Updated
