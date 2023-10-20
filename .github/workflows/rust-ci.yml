@@ -23,7 +23,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-rust_ci-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Test
         run: cargo test --release --verbose
       - name: Build
@@ -40,7 +40,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-rust_ci-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Test
         run: cargo test --release --verbose
       - name: Build
@@ -57,7 +57,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-rust_ci-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Test
         run: cargo test --release --verbose
       - name: Build
