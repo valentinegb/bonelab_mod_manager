@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       debug:
-        description: Whether to make a debug build or a release build
+        description: Make debug build
         required: false
         type: boolean
 
