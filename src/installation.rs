@@ -255,9 +255,9 @@ async fn _install_mod(
     while let Some(chunk) = stream.try_next().await? {
         bytes.append(&mut chunk.to_vec());
         mod_installation.increment_bytes(chunk.len() as u64);
-        debug!("received chunk");
     }
 
+    debug!("received all chunks");
     mod_installation.update_state(if updating {
         ModInstallationState::Updating
     } else {
