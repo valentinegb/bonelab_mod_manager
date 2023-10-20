@@ -2,6 +2,11 @@ name: Rust Build
 
 on:
   workflow_dispatch:
+    inputs:
+      debug:
+        description: Whether to make a debug build or a release build
+        required: false
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,20 +27,25 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build release
+        if: ${{ !steps.debug }}
         run: cargo build --release --verbose
       - name: Upload release artifact
+        if: ${{ !steps.debug }}
         uses: actions/upload-artifact@v3
         with:
           name: bonelab_mod_manager-${{ runner.os }}-release
           path: target/release/bonelab_mod_manager.exe
       - name: Build debug
+        if: ${{ steps.debug }}
         run: cargo build --verbose
       - name: Upload debug artifact
+        if: ${{ steps.debug }}
         uses: actions/upload-artifact@v3
         with:
           name: bonelab_mod_manager-${{ runner.os }}-debug
           path: target/debug/bonelab_mod_manager.exe
   build-macos:
+    if: ${{ !steps.debug }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -75,6 +85,7 @@ jobs:
           name: bonelab_mod_manager-${{ runner.os }}
           path: bonelab_mod_manager.dmg
   build-linux:
+    if: ${{ !steps.debug }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
