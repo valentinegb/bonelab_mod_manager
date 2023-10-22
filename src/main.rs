@@ -4,7 +4,7 @@ mod installation;
 
 use std::env;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use app_data::AppData;
 use authentication::{authenticate, delete_password};
 use console::{style, Key, Term};
@@ -61,6 +61,15 @@ async fn try_main() -> Result<()> {
 
     for (installed_mod_id, installed_mod) in app_data.installed_mods.clone() {
         if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&installed_mod_id)) {
+            debug!(
+                "removing installed mod with id `{}` and folder \"{}\"",
+                installed_mod_id,
+                installed_mod.folder.to_str().ok_or(anyhow!(
+                    "Could not convert folder name to `&str` for installed mod with ID of `{}`",
+                    installed_mod_id
+                ))?
+            );
+
             if let Some(err) = remove_dir_all(app_data.mods_dir_path()?.join(&installed_mod.folder))
                 .await
                 .err()
