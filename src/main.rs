@@ -4,7 +4,7 @@ mod installation;
 
 use std::env;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use app_data::AppData;
 use authentication::{authenticate, delete_password};
 use console::{style, Key, Term};
@@ -16,7 +16,11 @@ use indicatif::{MultiProgress, ProgressBar};
 use installation::{install_mod, ModInstallationState};
 use log::debug;
 use modio::{filter::In, mods};
-use tokio::{fs::remove_dir_all, io, task::JoinSet};
+use tokio::{
+    fs::{remove_dir_all, remove_file},
+    io,
+    task::JoinSet,
+};
 
 #[cfg(target_os = "windows")]
 use crate::app_data::BonelabPlatform;
@@ -61,19 +65,24 @@ async fn try_main() -> Result<()> {
 
     for (installed_mod_id, installed_mod) in app_data.installed_mods.clone() {
         if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&installed_mod_id)) {
+            let installed_mod_path = app_data.mods_dir_path()?.join(&installed_mod.folder);
+
             debug!(
                 "removing installed mod with id `{}` and folder \"{}\"",
                 installed_mod_id,
-                installed_mod.folder.to_str().ok_or(anyhow!(
-                    "Could not convert folder name to `&str` for installed mod with ID of `{}`",
-                    installed_mod_id
-                ))?
+                installed_mod_path.display(),
             );
 
-            if let Some(err) = remove_dir_all(app_data.mods_dir_path()?.join(&installed_mod.folder))
-                .await
-                .err()
-            {
+            let maybe_err;
+
+            // If it's a code mod, attempt to remove file instead of directory
+            if installed_mod_path.ends_with(".dll") {
+                maybe_err = remove_file(installed_mod_path).await.err();
+            } else {
+                maybe_err = remove_dir_all(installed_mod_path).await.err();
+            }
+
+            if let Some(err) = maybe_err {
                 if err.kind() != io::ErrorKind::NotFound {
                     bail!(err);
                 }
