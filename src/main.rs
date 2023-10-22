@@ -77,8 +77,10 @@ async fn try_main() -> Result<()> {
 
             // If it's a code mod, attempt to remove file instead of directory
             if installed_mod_path.ends_with(".dll") {
+                debug!("mod is probably a code mod");
                 maybe_err = remove_file(installed_mod_path).await.err();
             } else {
+                debug!("mod is probably not a code mod");
                 maybe_err = remove_dir_all(installed_mod_path).await.err();
             }
 
