@@ -22,7 +22,7 @@ indicatif = { version = "0.17.6", features = ["tokio"] }
 log = "0.4.20"
 modio = { git = "https://github.com/valentinegb/modio-rs.git", branch = "downloader-content-length" }
 postcard = { version = "1.0.8", features = ["use-std"] }
-serde = { version = "1.0.189", features = ["derive"] }
+serde = { version = "1.0.190", features = ["derive"] }
 tokio = { version = "1.33.0", features = ["full"] }
 zip = "0.6.6"
 
