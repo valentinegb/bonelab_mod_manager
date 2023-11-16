@@ -1191,12 +1191,12 @@ dependencies = [
 
 [[package]]
 name = "modio"
-version = "0.8.3"
-source = "git+https://github.com/valentinegb/modio-rs.git?branch=downloader-content-length#7bf667ea8b1bc8ac1902e78986f379eb86b9a840"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c777a64987c5ca3f7dbace5ac40c0bff56ec7c051824e4f40dbb71277f84452"
 dependencies = [
  "bitflags 2.4.1",
  "bytes 1.5.0",
- "futures-core",
  "futures-util",
  "http",
  "mime",

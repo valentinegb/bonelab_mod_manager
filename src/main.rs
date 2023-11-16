@@ -15,7 +15,7 @@ use env_logger::Env;
 use indicatif::{MultiProgress, ProgressBar};
 use installation::{install_mod, ModInstallationState};
 use log::debug;
-use modio::{filter::In, mods};
+use modio::{filter::In, mods, types::id::ModId};
 use tokio::{
     fs::{remove_dir_all, remove_file},
     io,
@@ -64,7 +64,9 @@ async fn try_main() -> Result<()> {
     let mut removed_mods = 0;
 
     for (installed_mod_id, installed_mod) in app_data.installed_mods.clone() {
-        if let Err(_) = subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&installed_mod_id)) {
+        if let Err(_) =
+            subscriptions.binary_search_by(|r#mod| r#mod.id.cmp(&ModId::new(installed_mod_id)))
+        {
             let installed_mod_path = app_data.mods_dir_path()?.join(&installed_mod.folder);
 
             debug!(

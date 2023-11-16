@@ -20,7 +20,7 @@ pub(crate) struct AppData {
     pub(crate) modio_token: Option<String>,
     #[cfg(target_os = "windows")]
     pub(crate) platform: Option<BonelabPlatform>,
-    pub(crate) installed_mods: HashMap<u32, InstalledMod>,
+    pub(crate) installed_mods: HashMap<u64, InstalledMod>,
 }
 
 #[cfg(target_os = "windows")]

@@ -155,7 +155,7 @@ pub(crate) async fn install_mod(
     r#mod: Mod,
     progress_bar: ProgressBar,
     modio: Modio,
-    installed_mods: HashMap<u32, InstalledMod>,
+    installed_mods: HashMap<u64, InstalledMod>,
 ) -> Result<ModInstallationState> {
     let mut mod_installation = ModInstallation::new(r#mod.name.clone(), progress_bar)?;
 
@@ -187,11 +187,11 @@ async fn _install_mod(
     r#mod: Mod,
     mod_installation: &mut ModInstallation,
     modio: Modio,
-    installed_mods: HashMap<u32, InstalledMod>,
+    installed_mods: HashMap<u64, InstalledMod>,
 ) -> Result<ModInstallationState> {
     let updating: bool;
 
-    if let Some(installed_mod) = installed_mods.get(&r#mod.id) {
+    if let Some(installed_mod) = installed_mods.get(&r#mod.id.get()) {
         debug!("mod is already installed");
 
         if installed_mod.date_updated >= r#mod.date_updated {
@@ -216,7 +216,7 @@ async fn _install_mod(
     }
     .display_name();
     #[cfg(target_family = "unix")]
-    let target_platform = TargetPlatform::Android.display_name();
+    let target_platform = TargetPlatform::ANDROID.display_name();
 
     let mut file_id = None;
 
@@ -287,7 +287,7 @@ async fn _install_mod(
     // TODO: push to headset
 
     app_data.installed_mods.insert(
-        r#mod.id,
+        r#mod.id.get(),
         InstalledMod {
             date_updated: r#mod.date_updated,
             folder,
