@@ -213,8 +213,9 @@ async fn _install_mod(
     let target_platform = match platform {
         BonelabPlatform::Windows => TargetPlatform::WINDOWS,
         BonelabPlatform::Quest => TargetPlatform::ANDROID,
-    }
-    .display_name();
+    };
+    #[cfg(target_os = "windows")]
+    let target_platform = target_platform.display_name();
     #[cfg(target_family = "unix")]
     let target_platform = TargetPlatform::ANDROID.display_name();
 
