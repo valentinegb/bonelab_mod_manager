@@ -24,10 +24,10 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-rust_ci-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Test
-        run: cargo test --release --verbose
       - name: Build
         run: cargo build --release --verbose
+      - name: Test
+        run: cargo test --release --verbose
   build-macos:
     runs-on: macos-latest
     steps:
@@ -41,10 +41,10 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-rust_ci-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Test
-        run: cargo test --release --verbose
       - name: Build
         run: cargo build --release --verbose
+      - name: Test
+        run: cargo test --release --verbose
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +58,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-rust_ci-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Test
-        run: cargo test --release --verbose
       - name: Build
         run: cargo build --release --verbose
+      - name: Test
+        run: cargo test --release --verbose
