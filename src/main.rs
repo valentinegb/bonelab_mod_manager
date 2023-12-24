@@ -1,19 +1,54 @@
-use tracing::{debug, warn, Level};
-use tracing_subscriber::FmtSubscriber;
+use anyhow::Result;
+use dotenvy_macro::dotenv;
+use modio::{Credentials, Modio};
+use tracing::{debug, error, info, instrument};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 #[tokio::main]
 async fn main() {
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(
-            #[cfg(debug_assertions)]
-            Level::TRACE,
-            #[cfg(not(debug_assertions))]
-            Level::WARN,
-        )
-        .finish();
+    init_tracing();
 
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    #[cfg(debug_assertions)]
+    {
+        dotenv!("BONELAB_MOD_MANAGER_API_KEY");
+        debug!("loaded env vars from `.env` file");
+    }
+
+    match try_main().await {
+        Ok(_) => info!("executed successfully"),
+        Err(error) => error!(?error, "executed unsuccessfully"),
+    }
+}
+
+async fn try_main() -> Result<()> {
+    authenticate().await?;
+
+    Ok(())
+}
+
+fn init_tracing() {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(
+            EnvFilter::try_from_default_env()
+                .or_else(|_| {
+                    EnvFilter::try_new(
+                        #[cfg(debug_assertions)]
+                        "TRACE",
+                        #[cfg(not(debug_assertions))]
+                        "WARN",
+                    )
+                })
+                .unwrap(),
+        )
+        .init();
 
     debug!("tracing initialized");
-    warn!("not yet implemented");
+}
+
+#[instrument]
+async fn authenticate() -> Result<()> {
+    Modio::new(Credentials::new(env!("BONELAB_MOD_MANAGER_API_KEY")))?;
+
+    Ok(())
 }

@@ -11,3 +11,6 @@ target/
 
 # macOS custom folder attributes
 .DS_Store
+
+# Developer environment variables
+.env
