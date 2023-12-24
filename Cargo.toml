@@ -10,3 +10,6 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+env_logger = "0.10.1"
+log = { version = "0.4.20", features = ["std"] }
+modio = "0.9.1"

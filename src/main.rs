@@ -1,3 +1,8 @@
+use log::{info, warn};
+
 fn main() {
-    todo!();
+    env_logger::init();
+
+    info!("`env_logger` initialized");
+    warn!("not yet implemented");
 }
