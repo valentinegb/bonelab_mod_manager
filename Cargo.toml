@@ -1,0 +1,12 @@
+[package]
+name = "bonelab_mod_manager"
+version = "1.0.0"
+authors = ["Valentine Briese <valentinegb@icloud.com>"]
+edition = "2021"
+description = "Mod manager for BONELAB"
+repository = "https://github.com/valentinegb/bonelab-mod-manager"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
