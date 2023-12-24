@@ -1,8 +1,19 @@
-use log::{info, warn};
+use tracing::{debug, warn, Level};
+use tracing_subscriber::FmtSubscriber;
 
-fn main() {
-    env_logger::init();
+#[tokio::main]
+async fn main() {
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(
+            #[cfg(debug_assertions)]
+            Level::TRACE,
+            #[cfg(not(debug_assertions))]
+            Level::WARN,
+        )
+        .finish();
 
-    info!("`env_logger` initialized");
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+    debug!("tracing initialized");
     warn!("not yet implemented");
 }

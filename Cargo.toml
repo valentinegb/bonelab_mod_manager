@@ -10,6 +10,7 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-env_logger = "0.10.1"
-log = { version = "0.4.20", features = ["std"] }
 modio = "0.9.1"
+tokio = { version = "1.35.1", features = ["full", "tracing"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
