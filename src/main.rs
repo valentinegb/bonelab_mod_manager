@@ -1,7 +1,7 @@
 use anyhow::Result;
 use dotenvy_macro::dotenv;
 use modio::{Credentials, Modio};
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 #[tokio::main]
@@ -48,7 +48,10 @@ fn init_tracing() {
 
 #[instrument]
 async fn authenticate() -> Result<()> {
-    Modio::new(Credentials::new(env!("BONELAB_MOD_MANAGER_API_KEY")))?;
+    let modio = Modio::new(Credentials::new(env!("BONELAB_MOD_MANAGER_API_KEY")))?;
+
+    debug!("constructed `Modio` with API key");
+    warn!("not yet implemented");
 
     Ok(())
 }
