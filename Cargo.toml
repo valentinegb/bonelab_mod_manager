@@ -16,7 +16,7 @@ publish = false
 anyhow = { version = "1.0.78", features = ["backtrace"] }
 console = "0.15.8"
 dialoguer = { version = "0.11.0", default-features = false, features = ["password"] }
-env_logger = "0.10.1"
+env_logger = "0.11.1"
 futures-util = { version = "0.3.30", features = ["tokio-io"] }
 indicatif = { version = "0.17.6", features = ["tokio"] }
 log = "0.4.20"
